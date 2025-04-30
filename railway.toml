@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm install --force && npm run build"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/"
+healthcheckTimeout = 60
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 5
+
+[nixpacks]
+node-version = "16" 
