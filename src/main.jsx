@@ -6,6 +6,7 @@ import Home from './pages/Home.jsx'
 import Menu from './pages/Menu.jsx'
 import Categoria from './pages/Categoria.jsx'
 import Produto from './pages/Produto.jsx'
+import Catalogo from './pages/Catalogo.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/menu" element={<Menu />} />
         <Route path="/categorias/:id" element={<Categoria />} />
         <Route path="/produtos/:id" element={<Produto />} />
+        <Route path="/catalogo" element={<Catalogo />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

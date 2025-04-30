@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-export default function Home() {
+export default function Catalogo() {
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
 
