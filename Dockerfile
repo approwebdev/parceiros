@@ -3,17 +3,18 @@ FROM node:16 as builder
 # Definir diretório de trabalho
 WORKDIR /app
 
-# Configurações do npm para tornar a instalação mais robusta
-RUN npm config set registry https://registry.npmjs.org/
-RUN npm config set fetch-retry-maxtimeout 600000 -g
-RUN npm config set fetch-timeout 600000 -g
+# Configurar ambiente
+ENV NODE_ENV=development
+ENV NPM_CONFIG_LOGLEVEL=error
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
 
-# Copiar apenas os arquivos de dependências primeiro
-COPY package*.json ./
+# Copiar apenas os arquivos de package.json primeiro
+COPY package.json ./
+COPY package-lock.json* ./
 
-# Limpar cache e instalar dependências
-RUN npm cache clean --force
-RUN npm install --no-optional --verbose --force
+# Instalar dependências com --legacy-peer-deps e ignorando scripts
+RUN npm install --legacy-peer-deps --no-optional --ignore-scripts
 
 # Copiar o resto dos arquivos
 COPY . .
@@ -28,17 +29,13 @@ WORKDIR /app
 
 # Copiar apenas os arquivos necessários da etapa de build
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/package.json ./
 
-# Configurar npm
-RUN npm config set registry https://registry.npmjs.org/
-RUN npm config set fetch-retry-maxtimeout 600000 -g
-
-# Instalar apenas dependências de produção
-RUN npm install --production --force
+# Definir variáveis de ambiente para produção
+ENV NODE_ENV=production
+ENV PORT=3000
 
 # Expor a porta
-ENV PORT=3000
 EXPOSE 3000
 
 # Comando para iniciar a aplicação
