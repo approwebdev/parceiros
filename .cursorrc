@@ -1,0 +1,7 @@
+{
+  "ignorePatterns": {
+    "global": {
+      "exclude": [".env", ".env.example"]
+    }
+  }
+}
