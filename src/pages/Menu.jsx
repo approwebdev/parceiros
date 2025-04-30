@@ -203,11 +203,15 @@ export default function Menu() {
                     from: 'menu'
                   }
                 })}
+                whileHover={{
+                  scale: 1.02,
+                  transition: { duration: 0.3 }
+                }}
               >
                 <motion.img
                   src={cat.image_url.startsWith('http') ? cat.image_url : `/catalogo/${cat.image_url}`}
                   alt={cat.name}
-                  className="w-full h-full object-cover transition-all duration-200 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-90"
                   initial={{ opacity: 0, scale: 1.1 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
@@ -227,6 +231,11 @@ export default function Menu() {
                 >
                   {cat.name}
                 </motion.div>
+                
+                {/* Overlay de hover */}
+                <motion.div
+                  className="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                />
               </motion.div>
             ))}
           </motion.div>

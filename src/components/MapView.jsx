@@ -371,7 +371,7 @@ const MapView = ({ distribuidores, userLocation, onDistribuidorClick, mapsApiLoa
                 )}
 
                 <div className="flex items-start gap-1.5 sm:gap-2 text-gray-700">
-                  <FaMapMarkedAlt className="text-base sm:text-xl text-blue-500 flex-shrink-0 mt-0.5" />
+                  <FaMapMarkedAlt className="text-base sm:text-xl text-[#1F7EB5] flex-shrink-0 mt-0.5" />
                   <span className="text-xs sm:text-base font-figtree line-clamp-2">{selectedDistribuidor.enderecoCompleto}</span>
                 </div>
               </div>
@@ -395,7 +395,7 @@ const MapView = ({ distribuidores, userLocation, onDistribuidorClick, mapsApiLoa
                   </button>
                 )}
                 <button
-                  className="flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-figtree text-xs sm:text-base"
+                  className="flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1 sm:py-2 bg-[#1F7EB5] text-white rounded-lg hover:bg-[#1a6b99] transition-colors font-figtree text-xs sm:text-base"
                   onClick={() => openMapLink(selectedDistribuidor.enderecoCompleto)}
                 >
                   <FaMapMarkedAlt className="text-base sm:text-xl" />

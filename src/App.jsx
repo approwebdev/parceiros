@@ -11,6 +11,7 @@ import DistributorCard from './components/DistributorCard';
 import LocationFinder from './components/LocationFinder';
 import MapView from './components/MapView';
 import fotoAna from './assets/fotoana.jpg';
+import DistanceFilter from './components/DistanceFilter';
 import './App.css';
 
 function App() {
@@ -153,9 +154,9 @@ function App() {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       
       // Adicionar classe de destaque temporariamente
-      element.classList.add('bg-blue-50');
+      element.classList.add('bg-[#1F7EB5]/10');
       setTimeout(() => {
-        element.classList.remove('bg-blue-50');
+        element.classList.remove('bg-[#1F7EB5]/10');
       }, 2000);
     }
   };
@@ -184,14 +185,10 @@ function App() {
         <div className="relative">
           <Hero />
           {/* SearchSection sobreposta ao Hero */}
-          <div className="absolute left-0 right-0 bottom-0 transform translate-y-1/2 px-4">
-            <div className="container mx-auto max-w-4xl">
+          <div className="absolute left-0 right-0 -bottom-12 md:bottom-0 transform md:translate-y-1/2 px-0 md:px-4">
+            <div className="container mx-auto w-[100%] md:w-auto md:max-w-5xl">
               <SearchSection 
                 onSearch={handleLocationFound} 
-                onViewChange={handleViewChange}
-                onDistanceChange={handleDistanceChange}
-                currentView={view}
-                currentDistance={distanceFilter}
                 mapsApiLoaded={mapsApiLoaded}
                 mapsLoadError={mapsLoadError}
               />
@@ -200,17 +197,27 @@ function App() {
         </div>
         
         {/* Container principal para conteúdo */}
-        <div className="container mx-auto max-w-4xl px-4 md:px-6 mt-16 md:mt-20 space-y-12 md:space-y-16">
-          {/* Seção de Localização */}
-          <div className="pt-48 md:pt-32">
+        <div className="container mx-auto max-w-4xl px-4 md:px-6 mt-12 md:mt-20 space-y-4 md:space-y-8">
+          {/* LocationFinder oculto mas funcional */}
+          <div className="hidden">
             <LocationFinder 
               onLocationFound={handleLocationFound}
               onLocationError={handleLocationError}
             />
           </div>
 
-          {/* Alternância entre lista e mapa */}
-          <div className="mb-6">
+          {/* Filtro de Distância e Alternância de Visualização */}
+          <div className="pt-8 md:pt-24 flex justify-center">
+            <DistanceFilter
+              currentDistance={distanceFilter}
+              onDistanceChange={handleDistanceChange}
+              currentView={view}
+              onViewChange={handleViewChange}
+            />
+          </div>
+
+          {/* Título da seção */}
+          <div className="mb-2 md:mb-4">
             <h2 className="text-xl min-[430px]:text-2xl md:text-3xl font-bold text-gray-800 text-center">
               {userLocation 
                 ? `Distribuidores próximos a você (${distanceFilter})` 
@@ -262,7 +269,7 @@ function App() {
 
         {/* Banner de Kits */}
         <div className="container mx-auto max-w-4xl px-4 md:px-4 my-6 md:my-8">
-          <div className="relative bg-black w-full h-[400px] md:h-[300px] rounded-[36px] overflow-hidden flex flex-col md:flex-row">
+          <div className="relative bg-black w-full h-[400px] md:h-[300px] rounded-[16px] overflow-hidden flex flex-col md:flex-row">
             {/* Lado esquerdo com texto */}
             <div className="flex-1 flex flex-col justify-center items-start p-6 md:p-12 z-10">
               <h2 className="text-white text-xl md:text-2xl font-figtree mb-2">

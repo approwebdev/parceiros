@@ -132,19 +132,19 @@ const DistributorCard = ({ distributor }) => {
         return {
           container: 'bg-[#8B0000] rounded-full px-4 py-2 flex flex-col items-center min-w-[120px]',
           distribuidor: 'text-white text-sm font-medium',
-          plano: 'text-[#B8860B] text-sm font-medium'
+          plano: 'text-[#E5C884] text-sm font-medium'
         };
       case 'business':
         return {
-          container: 'bg-black rounded-full px-4 py-2 flex flex-col items-center min-w-[120px]',
+          container: 'bg-black rounded-full px-4 py-1 flex flex-col items-center min-w-[120px]',
           distribuidor: 'text-white text-sm font-medium',
-          plano: 'text-[#B8860B] text-sm font-medium'
+          plano: 'text-[#E5C884] text-sm font-medium'
         };
       case 'pro':
         return {
           container: 'bg-gray-700 rounded-full px-4 py-2 flex flex-col items-center min-w-[120px]',
           distribuidor: 'text-white text-sm font-medium',
-          plano: 'text-[#B8860B] text-sm font-medium'
+          plano: 'text-[#E5C884] text-sm font-medium'
         };
       case 'starter':
         return {
@@ -162,7 +162,7 @@ const DistributorCard = ({ distributor }) => {
   };
 
   return (
-    <div className="relative bg-gray-50 rounded-[36px] shadow-md p-4 md:p-6 mb-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 hover:shadow-lg transition-shadow duration-200">
+    <div className="relative bg-gray-50 rounded-[16px] md:rounded-[96px] shadow-md p-4 md:p-6 mb-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 hover:shadow-lg transition-shadow duration-200">
       {/* Badge do Plano (posicionada no canto superior direito) */}
       {(distributor.plan_id || distributor.plan) && (
         <div className="absolute right-4 top-4 md:top-6 z-10">
@@ -178,7 +178,7 @@ const DistributorCard = ({ distributor }) => {
       )}
       
       {/* Container da Imagem com tamanho fixo */}
-      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 shadow-sm relative border-2 border-white mx-auto md:mx-0 mt-6 md:mt-0">
+      <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 shadow-sm relative border-2 border-white mx-auto md:mx-0 mt-6 md:mt-0">
         <img
           src={distributor.logo_url || imagePlaceholder}
           alt={distributor.name}
@@ -200,7 +200,7 @@ const DistributorCard = ({ distributor }) => {
           <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 justify-center md:justify-start">
             {distributor.phone && (
               <a href={`https://wa.me/${distributor.phone.replace(/\D/g, '')}`} 
-                className="flex items-center gap-2 text-gray-500 hover:text-blue-600">
+                className="flex items-center gap-2 text-gray-500 hover:text-[#1F7EB5]">
                 <div className="bg-gray-200 rounded-full p-1.5">
                   <FaWhatsapp className="text-gray-500" size={14} />
                 </div>
@@ -213,7 +213,7 @@ const DistributorCard = ({ distributor }) => {
                 href={`https://instagram.com/${distributor.instagram.replace(/^@/, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-gray-500 hover:text-blue-600"
+                className="flex items-center gap-2 text-gray-500 hover:text-[#1F7EB5]"
               >
                 <div className="bg-gray-200 rounded-full p-1.5">
                   <FaInstagram className="text-gray-500" size={14} />
@@ -228,7 +228,7 @@ const DistributorCard = ({ distributor }) => {
             <div className="flex justify-center md:justify-start">
               <div 
                 onClick={handleOpenMap}
-                className="flex items-start gap-2 text-blue-500 hover:underline cursor-pointer max-w-full"
+                className="flex items-start gap-2 text-[#1F7EB5] hover:underline cursor-pointer max-w-full"
               >
                 <div className="bg-gray-200 rounded-full p-1.5 mt-0.5 flex-shrink-0">
                   <FaStoreAlt className="text-gray-500" size={14} />
@@ -257,7 +257,7 @@ const DistributorCard = ({ distributor }) => {
             <span className="text-base md:text-lg font-medium">
               A {distributor.distance} de você
             </span>
-            <div className="ml-2 text-blue-500">
+            <div className="ml-2 text-[#1F7EB5]">
               <FaMapMarkerAlt size={18} />
             </div>
           </div>
