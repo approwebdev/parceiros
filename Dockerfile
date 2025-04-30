@@ -1,7 +1,4 @@
-FROM node:18-alpine as builder
-
-# Instalar dependências necessárias para o build
-RUN apk add --no-cache python3 make g++ git
+FROM node:18 as builder
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -10,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar todas as dependências (incluindo devDependencies)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copiar o resto dos arquivos
 COPY . .
@@ -19,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Iniciar nova imagem para produção
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
@@ -28,8 +25,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/vite.config.js ./
 
-# Instalar apenas as dependências de produção
-RUN npm ci --only=production
+# Instalar apenas dependências de produção com flag para ignorar erros
+RUN npm install --omit=dev --no-optional --no-audit
 
 # Expor a porta
 ENV PORT=3000
