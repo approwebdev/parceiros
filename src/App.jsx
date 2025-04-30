@@ -12,6 +12,7 @@ import LocationFinder from './components/LocationFinder';
 import MapView from './components/MapView';
 import fotoAna from './assets/fotoana.jpg';
 import DistanceFilter from './components/DistanceFilter';
+import config from './config';
 import './App.css';
 
 function App() {
@@ -20,13 +21,23 @@ function App() {
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [view, setView] = useState('list'); // 'list' ou 'map'
-  const [distanceFilter, setDistanceFilter] = useState('50km');
+  const [distanceFilter, setDistanceFilter] = useState(config.defaultDistance);
   const [selectedDistribuidor, setSelectedDistribuidor] = useState(null);
+  
   // Carregar script do Google Maps para usar Geocoder
   const { isLoaded: mapsApiLoaded, loadError: mapsLoadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: config.googleMapsApiKey,
     libraries: ['places', 'geometry'],
   });
+  
+  // Log de debug
+  useEffect(() => {
+    console.log("Google Maps API:", { 
+      apiKey: config.googleMapsApiKey ? "Definida" : "Não definida",
+      carregada: mapsApiLoaded,
+      erro: mapsLoadError ? mapsLoadError.message : "Nenhum"
+    });
+  }, [mapsApiLoaded, mapsLoadError]);
 
   // Converter o filtro de distância para km
   const parseDistanceFilter = (filter) => {

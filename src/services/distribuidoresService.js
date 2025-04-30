@@ -1,4 +1,34 @@
 import { supabase } from '../supabaseClient';
+import config from '../config';
+
+// Função auxiliar de geocodificação
+const geocodificarEndereco = async (endereco, geocoder) => {
+  try {
+    return new Promise((resolve, reject) => {
+      geocoder.geocode({ address: endereco }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          resolve({
+            lat: location.lat(),
+            lng: location.lng()
+          });
+        } else {
+          reject(new Error(`Geocoding falhou: ${status}`));
+        }
+      });
+    });
+  } catch (error) {
+    console.error(`Erro ao geocodificar endereço ${endereco}:`, error);
+    return null;
+  }
+};
+
+// Função para formatar distância
+const formatarDistancia = (distancia) => {
+  if (distancia === null || distancia === undefined) return 'Desconhecida';
+  if (distancia < 1) return `${Math.round(distancia * 1000)}m`;
+  return `${Math.round(distancia)}km`;
+};
 
 // Função para calcular a distância entre duas coordenadas em km (fórmula de Haversine)
 const calcularDistancia = (lat1, lng1, lat2, lng2) => {
@@ -15,17 +45,6 @@ const calcularDistancia = (lat1, lng1, lat2, lng2) => {
   const distancia = R * c; // Distância em km
   
   return distancia;
-};
-
-// Função para formatar a distância
-const formatarDistancia = (distancia) => {
-  if (distancia === null || distancia === undefined) return 'Distância desconhecida';
-  
-  if (distancia < 1) {
-    return `${Math.round(distancia * 1000)}m`;
-  } else {
-    return `${Math.round(distancia)}km`;
-  }
 };
 
 export const getDistribuidores = async () => {
@@ -69,59 +88,21 @@ export const getDistribuidores = async () => {
   }
 };
 
-// Função para geocodificar um endereço
-const geocodificarEndereco = async (endereco, geocoder) => {
-  if (!geocoder || !endereco) {
-    console.warn('Geocoder ou endereço não disponível');
-    return null;
-  }
-
-  try {
-    const result = await new Promise((resolve, reject) => {
-      geocoder.geocode({ 
-        address: endereco,
-        region: 'BR' // Forçar resultados no Brasil
-      }, (results, status) => {
-        if (status === 'OK' && results && results[0]) {
-          resolve(results[0]);
-        } else {
-          console.warn(`Status do geocoding: ${status} para endereço: ${endereco}`);
-          reject(new Error(`Geocoding falhou: ${status}`));
-        }
-      });
-    });
-
-    if (!result || !result.geometry || !result.geometry.location) {
-      console.warn('Resultado do geocoding inválido:', result);
-      return null;
-    }
-
-    return {
-      lat: result.geometry.location.lat(),
-      lng: result.geometry.location.lng(),
-      cidade: result.address_components.find(c => c.types.includes('administrative_area_level_2'))?.long_name,
-      estado: result.address_components.find(c => c.types.includes('administrative_area_level_1'))?.short_name
-    };
-  } catch (error) {
-    console.warn('Erro ao geocodificar:', error);
-    return null;
-  }
-};
-
 export const getDistribuidoresPorDistancia = async (latitude, longitude, raio = 100) => {
   try {
     console.log('Iniciando busca por distância:', { latitude, longitude, raio });
     
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    // Usar a chave do arquivo de configuração
+    const apiKey = config.googleMapsApiKey;
     if (!apiKey) {
       console.error('Chave do Google Maps não encontrada');
-      throw new Error('Chave do Google Maps não configurada. Verifique o arquivo .env');
+      throw new Error('Chave do Google Maps não configurada');
     }
 
     // Verificar se a API do Google Maps está carregada
     if (!window.google || !window.google.maps) {
       console.error('API do Google Maps não carregada');
-      throw new Error('API do Google Maps não carregada. Verifique se a chave está correta e se a API está habilitada.');
+      throw new Error('API do Google Maps não carregada');
     }
 
     // Buscar todos os distribuidores
