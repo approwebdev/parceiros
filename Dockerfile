@@ -6,17 +6,18 @@ RUN apk add --no-cache python3 make g++
 # Definir diretório de trabalho
 WORKDIR /app
 
-# Copiar apenas os arquivos de dependências primeiro
-COPY package.json ./
-COPY package-lock.json* ./
+# Copiar todos os arquivos primeiro
+COPY . .
+
+# Remover o script de postinstall temporariamente para evitar build automático
+RUN if grep -q "postinstall" package.json; then \
+    sed -i 's/"postinstall": "npm run build",/"_postinstall": "npm run build",/g' package.json; \
+    fi
 
 # Instalar todas as dependências (incluindo devDependencies)
 RUN npm install
 
-# Copiar o resto dos arquivos
-COPY . .
-
-# Build da aplicação
+# Agora executar o build manualmente
 RUN npm run build
 
 # Limpar dependências de desenvolvimento após o build
