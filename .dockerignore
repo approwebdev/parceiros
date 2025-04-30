@@ -5,7 +5,10 @@ Dockerfile
 .git
 .gitignore
 README.md
+.env
+.env.*
+dist
+build
 .vscode
 .idea
-dist
 *.log 
