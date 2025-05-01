@@ -146,7 +146,10 @@ export default function Categoria() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <div className="relative" style={{ width: "clamp(90px, 8vw, 120px)" }}>
-              <button className="w-full transform transition duration-200 ease-in-out hover:scale-110">
+              <button 
+                className="w-full transform transition duration-200 ease-in-out hover:scale-110"
+                onClick={() => navigate("/catalogo")}
+              >
                 <img
                   src="/catalogo/logo appro preta.svg"
                   alt="Logo Appro"
@@ -156,7 +159,7 @@ export default function Categoria() {
             </div>
             
             <motion.button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/menu")}
               className="group flex items-center transform transition-all duration-200 ease-in-out hover:scale-110"
               style={{ gap: "clamp(0.3rem, 0.5vw, 0.5rem)" }}
               initial={{ opacity: 0 }}

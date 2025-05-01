@@ -62,13 +62,8 @@ export default function Menu() {
 
   const next = () => {
     setCurrentIndex((prev) => {
-      if (isMobile) {
-        if (prev >= total - 1) return prev;
-        return prev + 1;
-      } else {
-        if (prev >= total - 4) return prev;
-        return prev + 1;
-      }
+      if (prev >= total - (isMobile ? 1 : 4)) return prev;
+      return prev + 1;
     });
   };
 
@@ -172,7 +167,7 @@ export default function Menu() {
           )}
 
           <motion.div 
-            className={`flex h-full ${isMobile ? 'gap-4 px-4' : ''}`}
+            className={`flex h-full ${isMobile ? 'gap-4 px-4' : 'gap-0'}`}
             ref={constraintsRef}
             drag="x"
             dragConstraints={constraintsRef}
@@ -197,7 +192,7 @@ export default function Menu() {
             {getSlides().map((cat, index) => (
               <motion.div
                 key={cat.id}
-                className={`relative ${isMobile ? 'w-[85%] flex-shrink-0' : 'w-full'} h-full overflow-hidden cursor-pointer group`}
+                className={`relative ${isMobile ? 'w-[85%] flex-shrink-0' : 'w-[25%] flex-shrink-0'} h-full overflow-hidden cursor-pointer group`}
                 onClick={() => navigate(`/categorias/${cat.id}`, {
                   state: {
                     from: 'menu'
@@ -241,7 +236,7 @@ export default function Menu() {
           </motion.div>
 
           <motion.button
-            onClick={() => navigate("/home")}
+            onClick={() => navigate("/catalogo")}
             className="absolute bottom-8 left-8 z-50 p-3 rounded-full bg-black/50 hover:scale-110 transition-all duration-200"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}

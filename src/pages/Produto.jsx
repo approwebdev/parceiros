@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getProductById, getRelatedProducts } from "../lib/api";
+import { FaWhatsapp, FaFacebookF, FaTwitter, FaPinterestP, FaEnvelope, FaCopy, FaShareAlt } from "react-icons/fa";
 
 // Dados estáticos para teste
 const imagensGaleria = [
@@ -45,6 +46,7 @@ export default function Produto() {
   const [relacionados, setRelacionados] = useState([]);
   const [slideIndex, setSlideIndex] = useState(0);
   const slides = [product, ...relacionados];
+  const [showShareOptions, setShowShareOptions] = useState(false);
 
   // Função para lidar com a navegação de volta
   const handleBack = () => {
@@ -213,7 +215,8 @@ export default function Produto() {
             price_original: productData.real_price,
             price_promotional: productData.promo_price,
             images: productData.product_images.map(img => img.url),
-            video_embed: productData.video_embed
+            video_embed: productData.video_embed,
+            button_link: productData.button_link || '#'
           };
           
           console.log('Produto formatado:', formattedProduct);
@@ -249,6 +252,50 @@ export default function Produto() {
       setError('ID do produto não fornecido');
     }
   }, [id]);
+
+  // Função para compartilhar o produto
+  const handleShare = () => {
+    setShowShareOptions(!showShareOptions);
+  };
+
+  // Função para compartilhar em uma rede social específica
+  const shareToSocial = (network) => {
+    const url = window.location.href;
+    const title = product ? product.name : 'Produto';
+    const description = product ? product.short_description : 'Confira esse produto';
+    
+    let shareUrl = '';
+
+    switch (network) {
+      case 'whatsapp':
+        shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${title} - ${description} ${url}`)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+        break;
+      case 'pinterest':
+        const imageUrl = product && product.images && product.images.length > 0 ? product.images[0] : '';
+        shareUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(title)}`;
+        break;
+      case 'email':
+        shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${description} ${url}`)}`;
+        break;
+      default:
+        // Copiar para área de transferência
+        navigator.clipboard.writeText(url)
+          .then(() => alert('Link copiado para a área de transferência!'))
+          .catch(err => console.error('Erro ao copiar link: ', err));
+        setShowShareOptions(false);
+        return;
+    }
+
+    // Abrir nova janela para compartilhar
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+    setShowShareOptions(false);
+  };
 
   if (loading) return (
     <div className="w-full h-screen flex items-center justify-center">
@@ -293,7 +340,7 @@ export default function Produto() {
             <div className="relative" style={{ width: "clamp(70px, 6vw, 120px)" }}>
               <button 
                 className="w-full transform transition duration-200 ease-in-out hover:scale-110"
-                onClick={() => navigate('/home')}
+                onClick={() => navigate('/catalogo')}
               >
                 <img
                   src="/catalogo/logo appro preta.svg"
@@ -473,11 +520,54 @@ export default function Produto() {
                         />
                       ))}
                       <span className="text-[clamp(0.85rem,1.2vw,1rem)] text-gray-600 ml-1 sm:ml-2">(56)</span>
-                      <img
-                        src="/catalogo/compartilhr.svg"
-                        alt="Compartilhar"
-                        className="w-[clamp(14px,1.2vw,20px)] h-[clamp(14px,1.2vw,20px)] text-gray-500 ml-auto hover:text-gray-700 hover:scale-110 cursor-pointer transition-all duration-300"
-                      />
+                      <div className="relative ml-auto">
+                        <FaShareAlt
+                          className="w-[clamp(14px,1.2vw,20px)] h-[clamp(14px,1.2vw,20px)] text-gray-500 hover:text-gray-700 hover:scale-110 cursor-pointer transition-all duration-300"
+                          onClick={handleShare}
+                        />
+                        
+                        {/* Menu de opções de compartilhamento */}
+                        {showShareOptions && (
+                          <div className="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-50">
+                            <button 
+                              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left flex items-center" 
+                              onClick={() => shareToSocial('whatsapp')}
+                            >
+                              <FaWhatsapp className="mr-2 text-green-500 text-lg" /> WhatsApp
+                            </button>
+                            <button 
+                              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left flex items-center" 
+                              onClick={() => shareToSocial('facebook')}
+                            >
+                              <FaFacebookF className="mr-2 text-blue-600 text-lg" /> Facebook
+                            </button>
+                            <button 
+                              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left flex items-center" 
+                              onClick={() => shareToSocial('twitter')}
+                            >
+                              <FaTwitter className="mr-2 text-blue-400 text-lg" /> Twitter
+                            </button>
+                            <button 
+                              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left flex items-center" 
+                              onClick={() => shareToSocial('pinterest')}
+                            >
+                              <FaPinterestP className="mr-2 text-red-600 text-lg" /> Pinterest
+                            </button>
+                            <button 
+                              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left flex items-center" 
+                              onClick={() => shareToSocial('email')}
+                            >
+                              <FaEnvelope className="mr-2 text-gray-500 text-lg" /> Email
+                            </button>
+                            <button 
+                              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left flex items-center" 
+                              onClick={() => shareToSocial('copy')}
+                            >
+                              <FaCopy className="mr-2 text-gray-600 text-lg" /> Copiar link
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Preço */}
@@ -513,18 +603,23 @@ export default function Produto() {
                             )}
                           </h2>
                         </div>
-                        <button className="
-                          bg-[#C4B398] hover:bg-[#b3a284] 
-                          text-white px-[clamp(1rem,1.5vw,1.5rem)] py-[clamp(0.5rem,0.8vw,0.75rem)]
-                          rounded-full shadow
-                          transition-all duration-300
-                          hover:scale-105
-                          text-[clamp(0.85rem,1.2vw,1rem)] font-medium
-                          self-end
-                          whitespace-nowrap
-                        ">
+                        <a 
+                          href={item.button_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="
+                            bg-[#C4B398] hover:bg-[#b3a284] 
+                            text-white px-[clamp(1rem,1.5vw,1.5rem)] py-[clamp(0.5rem,0.8vw,0.75rem)]
+                            rounded-full shadow
+                            transition-all duration-300
+                            hover:scale-105
+                            text-[clamp(0.85rem,1.2vw,1rem)] font-medium
+                            self-end
+                            whitespace-nowrap
+                          "
+                        >
                           Saiba mais...
-                        </button>
+                        </a>
                       </div>
                     </div>
                   </div>

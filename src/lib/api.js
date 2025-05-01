@@ -40,7 +40,8 @@ export const getProductById = async (id) => {
       .from('products')
       .select(`
         *,
-        category:categories(*)
+        category:categories(*),
+        product_images(id, url, is_main)
       `)
       .eq('id', id)
       .single();
@@ -50,14 +51,17 @@ export const getProductById = async (id) => {
       throw new Error(error.message);
     }
 
-    // Formatar os dados para manter compatibilidade com o componente
+    // Usar as imagens reais do produto, caso existam
     const formattedData = {
       ...data,
-      product_images: [
-        { url: '/catalogo/produtos/1.png' },
-        { url: '/catalogo/produtos/2.png' },
-        { url: '/catalogo/produtos/3.png' }
-      ]
+      // Manter a compatibilidade caso não tenha imagens
+      product_images: data.product_images?.length > 0
+        ? data.product_images
+        : [
+            { url: '/catalogo/produtos/1.png' },
+            { url: '/catalogo/produtos/2.png' },
+            { url: '/catalogo/produtos/3.png' }
+          ]
     };
 
     return formattedData;
@@ -120,7 +124,8 @@ export const getRelatedProducts = async (category, currentId) => {
       .from('products')
       .select(`
         *,
-        category:categories(*)
+        category:categories(*),
+        product_images(id, url, is_main)
       `)
       .eq('category_id', category)
       .neq('id', currentId)
@@ -134,11 +139,14 @@ export const getRelatedProducts = async (category, currentId) => {
     // Formatar os dados para manter compatibilidade com o componente
     const formattedData = data.map(product => ({
       ...product,
-      product_images: [
-        { url: '/catalogo/produtos/1.png' },
-        { url: '/catalogo/produtos/2.png' },
-        { url: '/catalogo/produtos/3.png' }
-      ]
+      // Usar as imagens reais do produto, caso existam
+      product_images: product.product_images?.length > 0
+        ? product.product_images
+        : [
+            { url: '/catalogo/produtos/1.png' },
+            { url: '/catalogo/produtos/2.png' },
+            { url: '/catalogo/produtos/3.png' }
+          ]
     }));
 
     return formattedData;
