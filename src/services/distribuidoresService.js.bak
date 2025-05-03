@@ -1,0 +1,279 @@
+import { supabase } from '../supabaseClient';
+import config from '../config';
+import { getBanners as originalGetBanners, getBannersByType as originalGetBannersByType } from '../lib/api';
+
+// Função wrapper para getBanners com tratamento de erros
+export const getBanners = async (posicao = null) => {
+  try {
+    console.log('Chamando getBanners para posição:', posicao);
+    
+    // Banner padrão para fallback
+    const defaultBanner = {
+      id: 1,
+      titulo: 'Kits Home Care',
+      descricao: 'Trate seus cabelos com eficiência!',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '/catalogo/foto anapaula.png',
+      posicao: posicao || 'todos'
+    };
+    
+    // Chamar a função original com tratamento de erros
+    let result;
+    try {
+      result = await originalGetBanners(posicao);
+      console.log('Resultado original de getBanners:', result);
+    } catch (error) {
+      console.error('Erro na função originalGetBanners:', error);
+      result = [defaultBanner];
+    }
+    
+    // Validar resultado
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      console.log('Resultado inválido, usando banner padrão');
+      return [defaultBanner];
+    }
+    
+    console.log('Retornando resultado válido:', result);
+    return result;
+  } catch (error) {
+    console.error('Erro não tratado em getBanners:', error);
+    // Retornar banner padrão em caso de erro
+    return [{
+      id: 1,
+      titulo: 'Kits Home Care',
+      descricao: 'Trate seus cabelos com eficiência!',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '/catalogo/foto anapaula.png',
+      posicao: posicao || 'todos'
+    }];
+  }
+};
+
+// Função wrapper para getBannersByType com tratamento de erros
+export const getBannersByType = async (tipo) => {
+  try {
+    console.log('Chamando getBannersByType para tipo:', tipo);
+    
+    // Banner padrão para fallback
+    const defaultBanner = {
+      id: 1,
+      titulo: 'Atenção',
+      descricao: 'Este site apenas informa quais salões utilizam os produtos A&P Professional. A responsabilidade pela qualidade dos serviços prestados é exclusivamente do salão listado acima.',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '',
+      tipo: tipo || 'informativo'
+    };
+    
+    // Chamar a função original com tratamento de erros
+    let result;
+    try {
+      result = await originalGetBannersByType(tipo);
+      console.log('Resultado original de getBannersByType:', result);
+    } catch (error) {
+      console.error('Erro na função originalGetBannersByType:', error);
+      result = [defaultBanner];
+    }
+    
+    // Validar resultado
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      console.log('Resultado inválido, usando banner padrão');
+      return [defaultBanner];
+    }
+    
+    console.log('Retornando resultado válido:', result);
+    return result;
+  } catch (error) {
+    console.error('Erro não tratado em getBannersByType:', error);
+    // Retornar banner padrão em caso de erro
+    return [{
+      id: 1,
+      titulo: 'Atenção',
+      descricao: 'Este site apenas informa quais salões utilizam os produtos A&P Professional. A responsabilidade pela qualidade dos serviços prestados é exclusivamente do salão listado acima.',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '',
+      tipo: tipo || 'informativo'
+    }];
+  }
+};
+
+// Função auxiliar de geocodificação
+const geocodificarEndereco = async (endereco, geocoder) => {
+  try {
+    return new Promise((resolve, reject) => {
+      geocoder.geocode({ address: endereco }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = results[0].geometry.location;
+          resolve({
+            lat: location.lat(),
+            lng: location.lng()
+          });
+        } else {
+          reject(new Error(`Geocoding falhou: ${status}`));
+        }
+      });
+    });
+  } catch (error) {
+    console.error(`Erro ao geocodificar endereço ${endereco}:`, error);
+    return null;
+  }
+};
+
+// Função para formatar distância
+const formatarDistancia = (distancia) => {
+  if (distancia === null || distancia === undefined) return 'Desconhecida';
+  if (distancia < 1) return `${Math.round(distancia * 1000)}m`;
+  return `${Math.round(distancia)}km`;
+};
+
+// Função para calcular a distância entre duas coordenadas em km (fórmula de Haversine)
+const calcularDistancia = (lat1, lng1, lat2, lng2) => {
+  if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+  
+  const R = 6371; // Raio da Terra em km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distancia = R * c; // Distância em km
+  
+  return distancia;
+};
+
+// Função para buscar todos os distribuidores
+export const getDistribuidores = async () => {
+  try {
+    console.log('Iniciando busca de distribuidores no Supabase...');
+    
+    const { data, error } = await supabase
+      .from('distribuidores')
+      .select(`
+        id,
+        name,
+        email,
+        phone,
+        address,
+        instagram,
+        logo_url,
+        plan_id,
+        cidade,
+        estado,
+        plans (
+          id,
+          name
+        )
+      `)
+      .order('name');
+    
+    if (error) {
+      console.error('Erro ao buscar distribuidores:', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('Nenhum distribuidor encontrado no banco de dados');
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Erro no serviço de distribuidores:', error);
+    throw error;
+  }
+};
+
+// Função para buscar distribuidores por distância
+export const getDistribuidoresPorDistancia = async (latitude, longitude, raio = 100) => {
+  try {
+    console.log('Iniciando busca por distância:', { latitude, longitude, raio });
+    
+    // Usar a chave do arquivo de configuração
+    const apiKey = config.googleMapsApiKey;
+    if (!apiKey) {
+      console.error('Chave do Google Maps não encontrada');
+      throw new Error('Chave do Google Maps não configurada');
+    }
+
+    // Verificar se a API do Google Maps está carregada
+    if (!window.google || !window.google.maps) {
+      console.error('API do Google Maps não carregada');
+      throw new Error('API do Google Maps não carregada');
+    }
+
+    // Buscar todos os distribuidores
+    console.log('Buscando distribuidores...');
+    const distribuidores = await getDistribuidores();
+    console.log(`Encontrados ${distribuidores.length} distribuidores no total`);
+    
+    const geocoder = new window.google.maps.Geocoder();
+
+    // Geocodificar e calcular distância para cada distribuidor
+    console.log('Calculando distâncias...');
+    const distribuidoresProcessados = await Promise.all(
+      distribuidores.map(async distribuidor => {
+        // Montar o endereço completo para geocoding
+        const enderecoCompleto = [
+          distribuidor.address,
+          distribuidor.cidade,
+          distribuidor.estado,
+          'Brasil'
+        ].filter(Boolean).join(', ');
+
+        // Geocoding usando JS API
+        let lat = null, lng = null, distancia = null, distanceFormatted = 'Desconhecida';
+        
+        try {
+          const result = await geocodificarEndereco(enderecoCompleto, geocoder);
+          if (result) {
+            lat = result.lat;
+            lng = result.lng;
+            distancia = calcularDistancia(latitude, longitude, lat, lng);
+            distanceFormatted = formatarDistancia(distancia);
+            console.log(`Distribuidor ${distribuidor.name}: ${distanceFormatted}`);
+          } else {
+            console.warn(`Não foi possível geocodificar o endereço de ${distribuidor.name}: ${enderecoCompleto}`);
+          }
+        } catch (error) {
+          console.warn(`Erro ao processar distribuidor ${distribuidor.name}:`, error);
+        }
+
+        return {
+          ...distribuidor,
+          lat,
+          lng,
+          distancia,
+          distance: distanceFormatted,
+          enderecoCompleto
+        };
+      })
+    );
+
+    // Filtrar distribuidores dentro do raio especificado
+    console.log('Filtrando distribuidores por distância...');
+    const distribuidoresFiltrados = distribuidoresProcessados
+      .filter(d => {
+        if (d.distancia === null) {
+          console.warn(`Distribuidor ${d.name} sem distância calculada`);
+          return false;
+        }
+        const dentroDoRaio = d.distancia <= raio;
+        if (!dentroDoRaio) {
+          console.log(`Distribuidor ${d.name} fora do raio (${d.distance})`);
+        }
+        return dentroDoRaio;
+      })
+      .sort((a, b) => a.distancia - b.distancia);
+
+    console.log(`Encontrados ${distribuidoresFiltrados.length} distribuidores dentro do raio de ${raio}km`);
+    return distribuidoresFiltrados;
+  } catch (error) {
+    console.error('Erro ao buscar distribuidores por distância:', error);
+    throw error;
+  }
+}; 

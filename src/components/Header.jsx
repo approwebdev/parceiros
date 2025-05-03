@@ -8,14 +8,19 @@ import logoSrc from '../assets/LogoAp-white.svg';
 const Header = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    window.location.href = '/';
+  };
+
   return (
     <header className="bg-black text-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4 flex justify-center items-center border-b border-white/30 relative">
         {/* Logo */}
         <div className="h-10">
-          <Link to="/">
+          <a href="/" onClick={handleLogoClick}>
             <img src={logoSrc} alt="A&P Cosmética" className="h-full w-auto" />
-          </Link>
+          </a>
         </div>
 
         {/* Ícone do Menu (Mobile) - Posicionado absolutamente */}

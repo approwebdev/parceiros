@@ -13,6 +13,7 @@ export default function Menu() {
   const constraintsRef = useRef(null);
   const [dragStartX, setDragStartX] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -82,11 +83,25 @@ export default function Menu() {
     const dragEndX = info.point.x;
     const diff = dragStartX - dragEndX;
 
+    // Detectar arrastos significativos (mais de 50px)
     if (Math.abs(diff) > 50) {
+      // Movimentar apenas 1 slide por vez, independente da distância arrastada
       if (diff > 0) {
+        // Arrastar para a esquerda (próximo slide)
         next();
       } else {
+        // Arrastar para a direita (slide anterior)
         prev();
+      }
+    } else {
+      // Se o arrasto foi pequeno, voltar para a posição original
+      // Reset animado para a posição atual
+      const container = constraintsRef.current;
+      if (container) {
+        container.style.transition = 'transform 0.3s ease';
+        container.style.transform = isMobile 
+          ? `translateX(${-currentIndex * 100}%)` 
+          : `translateX(${-currentIndex * 25}%)`;
       }
     }
   };
@@ -109,6 +124,11 @@ export default function Menu() {
     transition: { duration: 0.3 }
   };
 
+  // Função para ir para a página de catálogo
+  const handleHomeClick = () => {
+    navigate("/catalogo");
+  };
+
   return (
     <div className="w-screen h-screen overflow-hidden bg-black text-white font-figtree relative">
       {error && (
@@ -127,18 +147,6 @@ export default function Menu() {
         </div>
       ) : (
         <>
-          <motion.button
-            onClick={() => navigate("/")}
-            className="absolute bottom-8 left-8 z-50 p-3 rounded-full bg-black/50 hover:scale-110 transition-all duration-200"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <img src="/Home.svg" alt="Voltar" className="w-6 h-6" />
-          </motion.button>
-
           {total > (isMobile ? 1 : 4) && (
             <>
               <motion.button
@@ -175,10 +183,10 @@ export default function Menu() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             style={{
-              x: isMobile ? currentIndex * -85 + "%" : currentIndex * -25 + "%"
+              x: isMobile ? currentIndex * -100 + "%" : currentIndex * -25 + "%"
             }}
             animate={{
-              x: isMobile ? currentIndex * -85 + "%" : currentIndex * -25 + "%",
+              x: isMobile ? currentIndex * -100 + "%" : currentIndex * -25 + "%",
               opacity: 1
             }}
             initial={{ opacity: 0 }}
@@ -192,7 +200,7 @@ export default function Menu() {
             {getSlides().map((cat, index) => (
               <motion.div
                 key={cat.id}
-                className={`relative ${isMobile ? 'w-[85%] flex-shrink-0' : 'w-[25%] flex-shrink-0'} h-full overflow-hidden cursor-pointer group`}
+                className={`relative ${isMobile ? 'w-[100%] flex-shrink-0' : 'w-[25%] flex-shrink-0'} h-full overflow-hidden cursor-pointer group`}
                 onClick={() => navigate(`/categorias/${cat.id}`, {
                   state: {
                     from: 'menu'
@@ -236,7 +244,7 @@ export default function Menu() {
           </motion.div>
 
           <motion.button
-            onClick={() => navigate("/catalogo")}
+            onClick={handleHomeClick}
             className="absolute bottom-8 left-8 z-50 p-3 rounded-full bg-black/50 hover:scale-110 transition-all duration-200"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}

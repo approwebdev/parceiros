@@ -1,17 +1,31 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getProductsByCategory, getCategories } from "../lib/api";
+import { getProductsByCategory, getCategories, getNotifications } from "../lib/api";
+import { FaChevronLeft, FaChevronRight, FaBell } from "react-icons/fa";
 
 export default function Categoria() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState(null);
   const [produtos, setProdutos] = useState([]);
   const [categoria, setCategoria] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +58,7 @@ export default function Categoria() {
             slug: p.slug
           }));
           console.log('Produtos formatados:', produtosFormatados);
+          console.log('Certifique-se que todos os IDs estão corretos:', produtosFormatados.map(p => p.id));
           setProdutos(produtosFormatados);
         }
       } catch (err) {
@@ -59,18 +74,49 @@ export default function Categoria() {
     }
   }, [id]);
 
+  // Buscar notificações do Supabase
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setNotificationsLoading(true);
+        setNotificationsError(null);
+        const notificationsData = await getNotifications();
+        setNotifications(notificationsData);
+      } catch (err) {
+        console.error('Erro ao buscar notificações:', err);
+        setNotificationsError('Não foi possível carregar as notificações');
+      } finally {
+        setNotificationsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  const handleLogoClick = () => {
+    navigate("/catalogo");
+  };
+
   const total = produtos.length;
 
   const next = () => {
     setCurrentIndex((prev) => {
-      if (prev >= produtos.length - 1) return 0;
-      return prev + 1;
+      // No mobile, limite é o último produto
+      if (isMobile) {
+        if (prev >= produtos.length - 1) return prev;
+        return prev + 1;
+      }
+      // No desktop, limite é o último produto que ainda permite 4 produtos visíveis
+      else {
+        if (prev >= produtos.length - 4) return prev;
+        return prev + 1;
+      }
     });
   };
 
   const prev = () => {
     setCurrentIndex((prev) => {
-      if (prev <= 0) return produtos.length - 1;
+      if (prev <= 0) return prev;
       return prev - 1;
     });
   };
@@ -102,6 +148,18 @@ export default function Categoria() {
     if (diff > 50) next();
     if (diff < -50) prev();
   };
+
+  // Garantir que o índice atual esteja dentro dos limites válidos
+  useEffect(() => {
+    if (produtos.length > 0) {
+      const maxIndex = isMobile ? produtos.length - 1 : produtos.length - 4;
+      if (maxIndex < 0) return; // Se houver menos de 4 produtos no desktop
+      
+      if (currentIndex > maxIndex) {
+        setCurrentIndex(maxIndex);
+      }
+    }
+  }, [produtos, isMobile, currentIndex]);
 
   const getSlides = () => {
     let slides = [];
@@ -148,7 +206,7 @@ export default function Categoria() {
             <div className="relative" style={{ width: "clamp(90px, 8vw, 120px)" }}>
               <button 
                 className="w-full transform transition duration-200 ease-in-out hover:scale-110"
-                onClick={() => navigate("/catalogo")}
+                onClick={handleLogoClick}
               >
                 <img
                   src="/catalogo/logo appro preta.svg"
@@ -212,23 +270,25 @@ export default function Categoria() {
               className="group transform transition-all duration-200 ease-in-out hover:scale-110 relative"
               onClick={() => setShowNotifications(!showNotifications)}
             >
-              <img
-                src="/catalogo/sino.svg"
-                alt="Notificações"
-                className="transition-all duration-200"
+              <FaBell
+                className="transition-all duration-200 text-black"
                 style={{ 
                   width: "clamp(24px, 2vw, 32px)", 
                   height: "auto"
                 }}
               />
-              <span 
-                className="absolute top-0 right-0 block rounded-full" 
-                style={{ 
-                  width: "clamp(6px, 0.5vw, 8px)", 
-                  height: "clamp(6px, 0.5vw, 8px)",
-                  backgroundColor: "black" 
-                }} 
-              />
+              {notifications.length > 0 && (
+                <span 
+                  className="absolute top-0 right-0 block rounded-full flex items-center justify-center text-[10px] text-white font-bold" 
+                  style={{ 
+                    width: "clamp(14px, 1vw, 16px)", 
+                    height: "clamp(14px, 1vw, 16px)",
+                    backgroundColor: "red" 
+                  }} 
+                >
+                  {notifications.length}
+                </span>
+              )}
               <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-white text-xs py-1 px-2 rounded-md -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                 Notificações
               </div>
@@ -237,7 +297,7 @@ export default function Categoria() {
             {/* Popup de Notificações */}
             {showNotifications && (
               <motion.div 
-                className="absolute top-[calc(100%+1rem)] right-0 bg-zinc-900/95 backdrop-blur-sm rounded-xl shadow-lg p-4 min-w-[280px] border border-zinc-800"
+                className="absolute top-[calc(100%+1rem)] right-0 bg-zinc-900/95 backdrop-blur-sm rounded-xl shadow-lg p-4 min-w-[280px] border border-zinc-800 z-50"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -245,18 +305,98 @@ export default function Categoria() {
               >
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-sm font-medium text-white">Notificações</span>
-                  <button 
-                    onClick={() => setShowNotifications(false)}
-                    className="text-zinc-400 hover:text-white transition-colors duration-200"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        // Forçar busca de notificações novamente
+                        setNotificationsLoading(true);
+                        setNotificationsError(null);
+                        getNotifications()
+                          .then(data => {
+                            setNotifications(data);
+                            console.log("Notificações recarregadas:", data);
+                            // Mostrar feedback sobre a recarga
+                            if (data.length > 0) {
+                              alert(`${data.length} notificações carregadas com sucesso!`);
+                            } else {
+                              alert("Nenhuma notificação encontrada. Usando dados de exemplo.");
+                            }
+                          })
+                          .catch(err => {
+                            console.error("Erro ao recarregar notificações:", err);
+                            setNotificationsError("Erro ao recarregar");
+                            alert("Erro ao carregar notificações: " + err.message);
+                          })
+                          .finally(() => {
+                            setNotificationsLoading(false);
+                          });
+                      }}
+                      className="text-zinc-400 hover:text-white transition-colors duration-200"
+                      title="Recarregar notificações"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <button 
+                      onClick={() => setShowNotifications(false)}
+                      className="text-zinc-400 hover:text-white transition-colors duration-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <div className="text-zinc-400 text-xs">
-                  Nenhuma notificação no momento
-                </div>
+                
+                {notificationsLoading ? (
+                  <div className="flex justify-center py-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  </div>
+                ) : notificationsError ? (
+                  <div className="text-red-400 text-xs py-2">
+                    {notificationsError}
+                  </div>
+                ) : notifications.length > 0 ? (
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    {notifications.map((notification, index) => {
+                      console.log(`Renderizando notificação ${index}:`, notification);
+                      return (
+                        <div key={notification.id || index} className="border-b border-zinc-700 last:border-b-0 py-2">
+                          <h4 className="text-sm font-medium text-white mb-1">
+                            {notification.titulo || 'Sem título'}
+                          </h4>
+                          <p className="text-zinc-400 text-xs mb-1">
+                            {notification.conteudo || 'Sem conteúdo'}
+                          </p>
+                          {notification.tipo === 'link' && (
+                            <a 
+                              href={notification.url || '#'} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-400 hover:text-blue-300 transition-colors inline-block mt-1"
+                            >
+                              Saiba mais
+                            </a>
+                          )}
+                          <div className="text-zinc-500 text-[10px] mt-1">
+                            {notification.created_at ? new Date(notification.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida'}
+                          </div>
+                          <div className="text-zinc-600 text-[8px] italic">
+                            <span className="mr-2">Visibilidade: {notification.visibilidade || 'N/A'}</span>
+                            {notification.tipo && (
+                              <span className="mr-2">Tipo: {notification.tipo}</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-zinc-400 text-xs py-2">
+                    Nenhuma notificação no momento
+                  </div>
+                )}
               </motion.div>
             )}
           </motion.div>
@@ -277,7 +417,7 @@ export default function Categoria() {
           <>
             {/* Título com seta */}
             <motion.div 
-              className="text-center mt-8 mb-4 flex items-center justify-center gap-4"
+              className="text-center mt-8 mb-2 flex items-center justify-center gap-4"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
@@ -303,55 +443,75 @@ export default function Categoria() {
 
             {/* Lista de produtos */}
             {produtos.length > 0 ? (
-              <div className="w-full max-w-6xl mx-auto px-4">
+              <div className="w-full max-w-[90%] mx-auto px-4 mt-10">
                 <div className="relative">
                   {/* Botões de navegação */}
-                  <button
+                  <motion.button
                     onClick={prev}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-black w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all duration-300"
-                    style={{ transform: 'translate(-50%, -50%)' }}
+                    className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 text-white p-4 rounded-full bg-black/50 transition-all duration-200"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    ❮
-                  </button>
-                  <button
+                    <FaChevronLeft size={28} />
+                  </motion.button>
+                  <motion.button
                     onClick={next}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-black w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all duration-300"
-                    style={{ transform: 'translate(50%, -50%)' }}
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 z-40 text-white p-4 rounded-full bg-black/50 transition-all duration-200"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    ❯
-                  </button>
+                    <FaChevronRight size={28} />
+                  </motion.button>
 
                   {/* Carrossel */}
-                  <div className="overflow-hidden">
+                  <div className="overflow-hidden w-full mx-auto">
                     <div 
-                      className="flex transition-transform duration-500 ease-out"
-                      style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                      className="flex"
+                      style={{ 
+                        transform: isMobile
+                          ? `translateX(-${currentIndex * 100}%)`
+                          : `translateX(-${currentIndex * 25}%)`,
+                        transition: 'transform 0.5s ease'
+                      }}
                     >
-                      {produtos.map((produto) => (
+                      {produtos.map((produto, index) => (
                         <div
                           key={produto.id}
-                          className="w-full flex-shrink-0 flex flex-col items-center justify-center p-4 cursor-pointer"
-                          onClick={() => navigate(`/produtos/${produto.id}`, {
-                            state: {
-                              from: 'categoria',
-                              categoryId: id
-                            }
-                          })}
+                          className={`${isMobile ? 'w-[100%]' : 'w-[25%]'} flex-shrink-0 flex flex-col items-center justify-center p-5 cursor-pointer`}
+                          onClick={() => {
+                            console.log('Navegando para o produto:', produto);
+                            console.log('ID do produto:', produto.id);
+                            navigate(`/produtos/${produto.id}`, {
+                              state: {
+                                from: 'categoria',
+                                categoryId: id
+                              }
+                            });
+                          }}
                         >
-                          <div className="flex flex-col items-center">
-                            <img
-                              src={produto.imagem}
-                              alt={produto.nome}
-                              className="w-auto h-[300px] object-contain mb-6 transition-transform duration-300 hover:scale-105"
-                            />
-                            <h3 className="text-2xl font-bold text-center mb-2">
+                          <div className="flex flex-col items-center w-full">
+                            <div className="w-full h-[300px] flex items-center justify-center mb-6">
+                              <img
+                                src={produto.imagem}
+                                alt={produto.nome}
+                                className="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-105"
+                              />
+                            </div>
+                            <h3 className="text-2xl font-bold text-center mb-2 w-full">
                               {produto.nome}
                             </h3>
-                            {produto.nomeSecundario && (
-                              <p className="text-lg text-gray-600 text-center">
-                                {produto.nomeSecundario}
-                              </p>
-                            )}
+                            <p className="text-lg text-gray-600 text-center mb-2 w-full">
+                              {produto.nomeSecundario || ''}
+                            </p>
+                            <p className="text-base text-gray-500 text-center w-full">
+                              {produto.subtitulo || ''}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -360,15 +520,26 @@ export default function Categoria() {
 
                   {/* Indicadores */}
                   <div className="flex justify-center gap-2 mt-6">
-                    {produtos.map((_, idx) => (
-                      <button
-                        key={idx}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          idx === currentIndex ? 'bg-black w-4' : 'bg-gray-300'
-                        }`}
-                        onClick={() => setCurrentIndex(idx)}
-                      />
-                    ))}
+                    {isMobile 
+                      ? produtos.map((_, idx) => (
+                        <button
+                          key={idx}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            idx === currentIndex ? 'bg-black w-4' : 'bg-gray-300'
+                          }`}
+                          onClick={() => setCurrentIndex(idx)}
+                        />
+                      ))
+                      : produtos.slice(0, produtos.length - 3).map((_, idx) => (
+                        <button
+                          key={idx}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            idx === currentIndex ? 'bg-black w-4' : 'bg-gray-300'
+                          }`}
+                          onClick={() => setCurrentIndex(idx)}
+                        />
+                      ))
+                    }
                   </div>
                 </div>
               </div>

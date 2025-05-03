@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { Autocomplete } from '@react-google-maps/api';
 
@@ -7,6 +7,7 @@ const libraries = ['places']; // Biblioteca necessária para Autocomplete
 const SearchSection = ({ onSearch, mapsApiLoaded, mapsLoadError }) => {
   const [address, setAddress] = useState('');
   const autocompleteRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Usa flags de carregamento vindas do App
   const isLoaded = mapsApiLoaded;
@@ -15,13 +16,36 @@ const SearchSection = ({ onSearch, mapsApiLoaded, mapsLoadError }) => {
   const handlePlaceSelect = () => {
     if (autocompleteRef.current) {
       const place = autocompleteRef.current.getPlace();
-      if (place.geometry) {
-        const location = {
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
-        };
-        onSearch(location);
+      
+      if (place) {
+        // Atualiza o valor do input com o endereço completo selecionado
+        if (place.formatted_address) {
+          setAddress(place.formatted_address);
+        } else if (place.name) {
+          setAddress(place.name);
+        }
+        
+        // Verifica se tem geometria e envia a localização
+        if (place.geometry && place.geometry.location) {
+          const location = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          };
+          onSearch(location);
+        }
       }
+    }
+  };
+
+  // Quando o autocomplete é carregado, configura o evento para detectar mudanças na seleção
+  const onAutocompleteLoad = (autocomplete) => {
+    autocompleteRef.current = autocomplete;
+    
+    // Adiciona um ouvinte para quando o usuário selecionar uma sugestão com o mouse ou teclado
+    if (window.google && autocomplete) {
+      window.google.maps.event.addListener(autocomplete, 'place_changed', () => {
+        handlePlaceSelect();
+      });
     }
   };
 
@@ -48,14 +72,15 @@ const SearchSection = ({ onSearch, mapsApiLoaded, mapsLoadError }) => {
           <div className="relative max-w-full mx-auto">
             {isLoaded ? (
               <Autocomplete
-                onLoad={ref => (autocompleteRef.current = ref)}
-                onPlaceChanged={handlePlaceSelect}
+                onLoad={onAutocompleteLoad}
                 options={{
                   types: ['geocode', 'establishment'],
-                  componentRestrictions: { country: 'br' }
+                  componentRestrictions: { country: 'br' },
+                  fields: ['formatted_address', 'geometry', 'name']
                 }}
               >
                 <input
+                  ref={inputRef}
                   type="text"
                   placeholder="Digite um endereço..."
                   value={address}
