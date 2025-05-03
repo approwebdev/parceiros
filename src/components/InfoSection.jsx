@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlayCircle } from 'react-icons/fa';
-import { getBannersByType } from '../services/distribuidoresService';
+import { getBannersByType } from '../services/parceirosService';
 
 // Remover a importação da imagem, pois será substituída pelo vídeo
 // import infoImageSrc from '../assets/info-image.jpg';
@@ -18,8 +18,13 @@ const InfoSection = () => {
         const informativos = await getBannersByType('informativo');
         console.log('Informativos carregados:', informativos);
         
-        if (informativos && informativos.length > 0) {
-          setInformativo(informativos[0]);
+        // Filtrar informativos para parceiros ou todos
+        const informativosParaParceiros = informativos.filter(
+          info => info.posicao === 'parceiros' || info.posicao === 'todos'
+        );
+        
+        if (informativosParaParceiros && informativosParaParceiros.length > 0) {
+          setInformativo(informativosParaParceiros[0]);
         } else {
           // Banner padrão caso não encontre nenhum
           setInformativo({
@@ -27,7 +32,8 @@ const InfoSection = () => {
             descricao: 'Este site apenas informa quais salões utilizam os produtos A&P Professional. A responsabilidade pela qualidade dos serviços prestados é exclusivamente do salão listado acima.',
             cta_texto: 'Saiba mais',
             cta_link: '#',
-            imagem_url: ''
+            imagem_url: '',
+            posicao: 'todos'
           });
         }
       } catch (err) {
@@ -40,7 +46,8 @@ const InfoSection = () => {
           descricao: 'Este site apenas informa quais salões utilizam os produtos A&P Professional. A responsabilidade pela qualidade dos serviços prestados é exclusivamente do salão listado acima.',
           cta_texto: 'Saiba mais',
           cta_link: '#',
-          imagem_url: ''
+          imagem_url: '',
+          posicao: 'todos'
         });
       } finally {
         setLoading(false);

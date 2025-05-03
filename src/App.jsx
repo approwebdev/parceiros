@@ -6,8 +6,8 @@ import Hero from './components/Hero';
 import SearchSection from './components/SearchSection';
 import InfoSection from './components/InfoSection';
 import Footer from './components/Footer';
-import { getDistribuidores, getDistribuidoresPorDistancia, getBanners } from './services/distribuidoresService';
-import DistributorCard from './components/DistributorCard';
+import { getParceiros, getParceirosPorDistancia, getBanners } from './services/parceirosService';
+import ParceiroCard from './components/ParceiroCard';
 import LocationFinder from './components/LocationFinder';
 import MapView from './components/MapView';
 import fotoAna from './assets/fotoana.jpg';
@@ -16,13 +16,13 @@ import config from './config';
 import './App.css';
 
 function App() {
-  const [distribuidores, setDistribuidores] = useState([]);
+  const [parceiros, setParceiros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [view, setView] = useState('list'); // 'list' ou 'map'
   const [distanceFilter, setDistanceFilter] = useState(config.defaultDistance);
-  const [selectedDistribuidor, setSelectedDistribuidor] = useState(null);
+  const [selectedParceiro, setSelectedParceiro] = useState(null);
   const [banners, setBanners] = useState([]);
   const [bannerLoading, setBannerLoading] = useState(true);
   
@@ -47,13 +47,13 @@ function App() {
     return parseInt(filter.replace('km', ''));
   };
 
-  // Função para buscar todos os distribuidores
-  const fetchAllDistribuidores = async () => {
+  // Função para buscar todos os parceiros
+  const fetchAllParceiros = async () => {
     try {
       setLoading(true);
-      const data = await getDistribuidores();
+      const data = await getParceiros();
       console.log("Dados do Supabase:", data);
-      setDistribuidores(data || []);
+      setParceiros(data || []);
       setLoading(false);
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
@@ -62,44 +62,44 @@ function App() {
     }
   };
 
-  // Função para buscar distribuidores com distância simulada quando temos localização
-  const fetchDistribuidoresPorDistancia = async () => {
+  // Função para buscar parceiros com distância simulada quando temos localização
+  const fetchParceirosPorDistancia = async () => {
     console.log('Iniciando busca por distância...');
     console.log('Localização:', userLocation);
     console.log('Filtro:', distanceFilter);
 
     if (!userLocation || !userLocation.lat || !userLocation.lng) {
-      console.log('Localização do usuário não disponível, buscando todos os distribuidores');
-      await fetchAllDistribuidores();
+      console.log('Localização do usuário não disponível, buscando todos os parceiros');
+      await fetchAllParceiros();
       return;
     }
 
     try {
       setLoading(true);
       const maxDistance = parseDistanceFilter(distanceFilter);
-      console.log("Buscando distribuidores com distância máxima de:", maxDistance, "km");
+      console.log("Buscando parceiros com distância máxima de:", maxDistance, "km");
       
-      const data = await getDistribuidoresPorDistancia(
+      const data = await getParceirosPorDistancia(
         userLocation.lat,
         userLocation.lng,
         maxDistance
       );
       
-      console.log("Distribuidores encontrados:", data.length);
-      setDistribuidores(data || []);
+      console.log("Parceiros encontrados:", data.length);
+      setParceiros(data || []);
       setError(null);
     } catch (error) {
-      console.error("Erro ao buscar distribuidores por distância:", error);
-      setError(`Erro ao buscar distribuidores: ${error.message}`);
-      await fetchAllDistribuidores();
+      console.error("Erro ao buscar parceiros por distância:", error);
+      setError(`Erro ao buscar parceiros: ${error.message}`);
+      await fetchAllParceiros();
     } finally {
       setLoading(false);
     }
   };
 
-  // Efeito para buscar os distribuidores no carregamento inicial
+  // Efeito para buscar os parceiros no carregamento inicial
   useEffect(() => {
-    fetchAllDistribuidores();
+    fetchAllParceiros();
   }, []);
 
   // Efeito para buscar os banners
@@ -115,10 +115,15 @@ function App() {
         // Filtrar apenas banners do tipo 'banner'
         const bannersFiltrados = bannersData.filter(banner => banner.tipo === 'banner');
         
+        // Filtrar apenas banners que são para parceiros ou todos
+        const bannersParaParceiros = bannersFiltrados.filter(
+          banner => banner.posicao === 'parceiros' || banner.posicao === 'todos'
+        );
+        
         // Se houver banners disponíveis, usa todos
-        if (bannersFiltrados && bannersFiltrados.length > 0) {
-          console.log('Usando banners filtrados:', bannersFiltrados);
-          setBanners(bannersFiltrados);
+        if (bannersParaParceiros && bannersParaParceiros.length > 0) {
+          console.log('Usando banners filtrados:', bannersParaParceiros);
+          setBanners(bannersParaParceiros);
         } else {
           console.log('Nenhum banner válido encontrado, usando dados padrão');
           // Dados padrão para o banner caso não haja banners no banco
@@ -128,7 +133,8 @@ function App() {
             cta_texto: 'Saiba mais',
             cta_link: '#',
             imagem_url: fotoAna,
-            tipo: 'banner'
+            tipo: 'banner',
+            posicao: 'todos'
           }]);
         }
       } catch (error) {
@@ -141,7 +147,8 @@ function App() {
           cta_texto: 'Saiba mais',
           cta_link: '#',
           imagem_url: fotoAna,
-          tipo: 'banner'
+          tipo: 'banner',
+          posicao: 'todos'
         }]);
       } finally {
         setBannerLoading(false);
@@ -151,7 +158,7 @@ function App() {
     fetchBanners();
   }, []);
 
-  // Efeito para atualizar os distribuidores quando a localização ou distância mudar
+  // Efeito para atualizar os parceiros quando a localização ou distância mudar
   useEffect(() => {
     if (!mapsApiLoaded) {
       console.log('Aguardando carregamento da API do Maps...');
@@ -163,12 +170,12 @@ function App() {
       return;
     }
 
-    console.log('Atualizando distribuidores...');
+    console.log('Atualizando parceiros...');
     console.log('Localização:', userLocation);
     console.log('Filtro:', distanceFilter);
     
     const timeoutId = setTimeout(() => {
-      fetchDistribuidoresPorDistancia();
+      fetchParceirosPorDistancia();
     }, 300);
     
     return () => clearTimeout(timeoutId);
@@ -205,13 +212,13 @@ function App() {
     setDistanceFilter(newDistance);
   };
 
-  // Função para lidar com o clique em um distribuidor no mapa
-  const handleDistribuidorClick = (distribuidor) => {
-    setSelectedDistribuidor(distribuidor);
+  // Função para lidar com o clique em um parceiro no mapa
+  const handleParceiroClick = (parceiro) => {
+    setSelectedParceiro(parceiro);
     setView('list'); // Mudar para a visualização de lista para mostrar os detalhes
     
-    // Rolar até o distribuidor selecionado
-    const element = document.getElementById(`distribuidor-${distribuidor.id}`);
+    // Rolar até o parceiro selecionado
+    const element = document.getElementById(`parceiro-${parceiro.id}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       
@@ -224,15 +231,15 @@ function App() {
   };
 
   // Mostrar loader apenas na carga inicial (antes de termos userLocation)
-  if (loading && distribuidores.length === 0 && !userLocation) {
+  if (loading && parceiros.length === 0 && !userLocation) {
     return (
       <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Carregando distribuidores...</div>
+        <div className="text-xl text-gray-600">Carregando parceiros...</div>
       </div>
     );
   }
 
-  if (error && distribuidores.length === 0) {
+  if (error && parceiros.length === 0) {
     return (
       <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
         <div className="text-xl text-red-600">{error}</div>
@@ -282,8 +289,8 @@ function App() {
           <div className="mb-2 md:mb-4">
             <h2 className="text-xl min-[430px]:text-2xl md:text-3xl font-bold text-gray-800 text-center">
               {userLocation 
-                ? `Distribuidores próximos a você (${distanceFilter})` 
-                : 'Todos os Distribuidores'}
+                ? `Parceiros próximos a você (${distanceFilter})` 
+                : 'Todos os Parceiros'}
             </h2>
           </div>
           
@@ -291,9 +298,9 @@ function App() {
           {view === 'map' && (
             <div className="mb-8">
               <MapView 
-                distribuidores={distribuidores} 
+                distribuidores={parceiros} 
                 userLocation={userLocation}
-                onDistribuidorClick={handleDistribuidorClick}
+                onDistribuidorClick={handleParceiroClick}
                 mapsApiLoaded={mapsApiLoaded}
                 mapsLoadError={mapsLoadError}
                 distanceFilter={distanceFilter}
@@ -304,22 +311,22 @@ function App() {
           {/* Vista de lista */}
           {view === 'list' && (
             <div>
-              {distribuidores.length === 0 ? (
+              {parceiros.length === 0 ? (
                 <div className="text-xl text-gray-600 text-center py-12 bg-gray-50 rounded-lg">
                   {userLocation 
-                    ? `Nenhum distribuidor encontrado em um raio de ${distanceFilter}.`
-                    : 'Nenhum distribuidor encontrado.'}
+                    ? `Nenhum parceiro encontrado em um raio de ${distanceFilter}.`
+                    : 'Nenhum parceiro encontrado.'}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-6">
-                  {distribuidores.map((distribuidor) => (
+                  {parceiros.map((parceiro) => (
                     <div 
-                      id={`distribuidor-${distribuidor.id}`}
-                      key={distribuidor.id}
-                      className={`transition-all duration-500 ${selectedDistribuidor?.id === distribuidor.id ? 'ring-2 ring-blue-400 rounded-[36px]' : ''}`}
+                      id={`parceiro-${parceiro.id}`}
+                      key={parceiro.id}
+                      className={`transition-all duration-500 ${selectedParceiro?.id === parceiro.id ? 'ring-2 ring-blue-400 rounded-[36px]' : ''}`}
                     >
-                      <DistributorCard 
-                        distributor={distribuidor}
+                      <ParceiroCard 
+                        distributor={parceiro}
                       />
                     </div>
                   ))}
@@ -329,7 +336,7 @@ function App() {
           )}
         </div>
 
-        {/* Banners de Kits - Mostrar todos os banners disponíveis */}
+        {/* Banners de Kits - Mostrar apenas os banners para parceiros ou todos */}
         {banners.length > 0 && (
           <div className="container mx-auto max-w-4xl px-4 md:px-4 my-6 md:my-8 space-y-6">
             {banners.map((banner, index) => (
