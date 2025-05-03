@@ -5,7 +5,7 @@ import heroImageSrc from '../assets/foto 2.png';
 
 const Hero = () => {
   return (
-    <section className="relative w-full bg-black h-[60vh] md:h-[80vh]">
+    <section className="relative w-full bg-white h-[60vh] md:h-[80vh]">
       <img
         src={heroImageSrc}
         alt="A&P Cosmética Hero Image"
