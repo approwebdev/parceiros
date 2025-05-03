@@ -64,7 +64,7 @@ const SearchSection = ({ onSearch, mapsApiLoaded, mapsLoadError }) => {
           <h1 className="text-4xl min-[430px]:text-4xl md:text-5xl lg:text-5xl font-bold mb-6 md:mb-6">
             <span className="text-white">Encontre o </span>
             <span className="bg-gradient-to-b from-[#F8E7BF] to-[#E5C884] text-transparent bg-clip-text">
-              Distribuidor
+              Parceiro
             </span>
             <span className="text-white"> mais<br />próximo de você.</span>
           </h1>
