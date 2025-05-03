@@ -10,7 +10,7 @@ import { getParceiros, getParceirosPorDistancia, getBanners } from './services/p
 import ParceiroCard from './components/ParceiroCard';
 import LocationFinder from './components/LocationFinder';
 import MapView from './components/MapView';
-import fotoAna from './assets/fotoana.jpg';
+import foto2 from './assets/foto 2.png';
 import DistanceFilter from './components/DistanceFilter';
 import config from './config';
 import './App.css';
@@ -129,10 +129,10 @@ function App() {
           // Dados padrão para o banner caso não haja banners no banco
           setBanners([{
             titulo: 'Kits Home Care',
-            descricao: 'Trate seus cabelos com eficiência!',
+            descricao: 'Encontre os salões que utilizam Ap Professional!',
             cta_texto: 'Saiba mais',
             cta_link: '#',
-            imagem_url: fotoAna,
+            imagem_url: foto2,
             tipo: 'banner',
             posicao: 'todos'
           }]);
@@ -143,10 +143,10 @@ function App() {
         // Dados padrão para o banner em caso de erro
         setBanners([{
           titulo: 'Kits Home Care',
-          descricao: 'Trate seus cabelos com eficiência!',
+          descricao: 'Encontre os salões que utilizam Ap Professional!',
           cta_texto: 'Saiba mais',
           cta_link: '#',
-          imagem_url: fotoAna,
+          imagem_url: foto2,
           tipo: 'banner',
           posicao: 'todos'
         }]);
@@ -347,7 +347,7 @@ function App() {
                     {banner.titulo || 'Kits Home Care'}
                   </h2>
                   <h1 className="text-white text-3xl md:text-4xl font-figtree font-bold mb-6 max-w-md">
-                    {banner.descricao || 'Trate seus cabelos com eficiência!'}
+                    {banner.descricao || 'Encontre os salões que utilizam Ap Professional!'}
                   </h1>
                   <a 
                     href={banner.cta_link || '#'} 
@@ -360,7 +360,7 @@ function App() {
                 {/* Lado direito com imagem */}
                 <div className="flex-1 relative h-48 md:h-auto">
                   <img
-                    src={banner.imagem_url || fotoAna}
+                    src={banner.imagem_url || foto2}
                     alt="Imagem do banner"
                     className="absolute inset-0 w-full h-full object-cover"
                   />

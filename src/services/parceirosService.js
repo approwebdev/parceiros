@@ -11,10 +11,10 @@ export const getBanners = async (posicao = null) => {
     const defaultBanner = {
       id: 1,
       titulo: 'Kits Home Care',
-      descricao: 'Trate seus cabelos com eficiência!',
+      descricao: 'Encontre os salões que utilizam Ap Professional!',
       cta_texto: 'Saiba mais',
       cta_link: '#',
-      imagem_url: '/catalogo/foto anapaula.png',
+      imagem_url: '/catalogo/foto 2.png',
       tipo: 'banner',
       posicao: posicao || 'todos'
     };
@@ -48,10 +48,10 @@ export const getBanners = async (posicao = null) => {
     const validBanners = data.map(banner => ({
       id: banner.id || 1,
       titulo: banner.titulo || 'Kits Home Care',
-      descricao: banner.descricao || 'Trate seus cabelos com eficiência!',
+      descricao: banner.descricao || 'Encontre os salões que utilizam Ap Professional!',
       cta_texto: banner.cta_texto || 'Saiba mais',
       cta_link: banner.cta_link || '#',
-      imagem_url: banner.imagem_url || '/catalogo/foto anapaula.png',
+      imagem_url: banner.imagem_url || '/catalogo/foto 2.png',
       tipo: banner.tipo || 'banner',
       posicao: banner.posicao || posicao || 'todos'
     }));
@@ -66,10 +66,10 @@ export const getBanners = async (posicao = null) => {
     return [{
       id: 1,
       titulo: 'Kits Home Care',
-      descricao: 'Trate seus cabelos com eficiência!',
+      descricao: 'Encontre os salões que utilizam Ap Professional!',
       cta_texto: 'Saiba mais',
       cta_link: '#',
-      imagem_url: '/catalogo/foto anapaula.png',
+      imagem_url: '/catalogo/foto 2.png',
       tipo: 'banner',
       posicao: posicao || 'todos'
     }];
