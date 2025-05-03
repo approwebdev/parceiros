@@ -1,5 +1,106 @@
 import { supabase } from '../supabaseClient';
 import config from '../config';
+import { getBanners as originalGetBanners, getBannersByType as originalGetBannersByType } from '../lib/api';
+
+// Função wrapper para getBanners com tratamento de erros
+export const getBanners = async (posicao = null) => {
+  try {
+    console.log('Chamando getBanners para posição:', posicao);
+    
+    // Banner padrão para fallback
+    const defaultBanner = {
+      id: 1,
+      titulo: 'Kits Home Care',
+      descricao: 'Trate seus cabelos com eficiência!',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '/catalogo/foto anapaula.png',
+      tipo: 'banner',
+      posicao: posicao || 'todos'
+    };
+    
+    // Chamar a função original com tratamento de erros
+    let result;
+    try {
+      result = await originalGetBanners(posicao);
+      console.log('Resultado original de getBanners:', result);
+    } catch (error) {
+      console.error('Erro na função originalGetBanners:', error);
+      result = [defaultBanner];
+    }
+    
+    // Validar resultado
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      console.log('Resultado inválido, usando banner padrão');
+      return [defaultBanner];
+    }
+    
+    console.log('Retornando resultado válido:', result);
+    return result;
+  } catch (error) {
+    console.error('Erro não tratado em getBanners:', error);
+    // Retornar banner padrão em caso de erro
+    return [{
+      id: 1,
+      titulo: 'Kits Home Care',
+      descricao: 'Trate seus cabelos com eficiência!',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '/catalogo/foto anapaula.png',
+      tipo: 'banner',
+      posicao: posicao || 'todos'
+    }];
+  }
+};
+
+// Função wrapper para getBannersByType com tratamento de erros
+export const getBannersByType = async (tipo) => {
+  try {
+    console.log('Chamando getBannersByType para tipo:', tipo);
+    
+    // Banner padrão para fallback
+    const defaultBanner = {
+      id: 1,
+      titulo: 'Atenção',
+      descricao: 'Este site apenas informa quais salões utilizam os produtos A&P Professional. A responsabilidade pela qualidade dos serviços prestados é exclusivamente do salão listado acima.',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '',
+      tipo: tipo || 'informativo'
+    };
+    
+    // Chamar a função original com tratamento de erros
+    let result;
+    try {
+      result = await originalGetBannersByType(tipo);
+      console.log('Resultado original de getBannersByType:', result);
+    } catch (error) {
+      console.error('Erro na função originalGetBannersByType:', error);
+      result = [defaultBanner];
+    }
+    
+    // Validar resultado
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      console.log('Resultado inválido, usando banner padrão');
+      return [defaultBanner];
+    }
+    
+    console.log('Retornando resultado válido:', result);
+    return result;
+  } catch (error) {
+    console.error('Erro não tratado em getBannersByType:', error);
+    // Retornar banner padrão em caso de erro
+    return [{
+      id: 1,
+      titulo: 'Atenção',
+      descricao: 'Este site apenas informa quais salões utilizam os produtos A&P Professional. A responsabilidade pela qualidade dos serviços prestados é exclusivamente do salão listado acima.',
+      cta_texto: 'Saiba mais',
+      cta_link: '#',
+      imagem_url: '',
+      tipo: tipo || 'informativo'
+    }];
+  }
+};
 
 // Função auxiliar de geocodificação
 const geocodificarEndereco = async (endereco, geocoder) => {
@@ -47,6 +148,7 @@ const calcularDistancia = (lat1, lng1, lat2, lng2) => {
   return distancia;
 };
 
+// Função para buscar todos os distribuidores
 export const getDistribuidores = async () => {
   try {
     console.log('Iniciando busca de distribuidores no Supabase...');
@@ -88,6 +190,7 @@ export const getDistribuidores = async () => {
   }
 };
 
+// Função para buscar distribuidores por distância
 export const getDistribuidoresPorDistancia = async (latitude, longitude, raio = 100) => {
   try {
     console.log('Iniciando busca por distância:', { latitude, longitude, raio });
@@ -175,4 +278,4 @@ export const getDistribuidoresPorDistancia = async (latitude, longitude, raio = 
     console.error('Erro ao buscar distribuidores por distância:', error);
     throw error;
   }
-}; 
+};
