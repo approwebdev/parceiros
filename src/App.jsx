@@ -6,7 +6,7 @@ import Hero from './components/Hero';
 import SearchSection from './components/SearchSection';
 import InfoSection from './components/InfoSection';
 import Footer from './components/Footer';
-import { getDistribuidores, getDistribuidoresPorDistancia, getBanners, getBannersByType } from './services/distribuidoresService';
+import { getDistribuidores, getDistribuidoresPorDistancia, getBanners } from './services/distribuidoresService';
 import DistributorCard from './components/DistributorCard';
 import LocationFinder from './components/LocationFinder';
 import MapView from './components/MapView';
@@ -107,15 +107,18 @@ function App() {
     const fetchBanners = async () => {
       try {
         setBannerLoading(true);
-        // Alterar para buscar banners do tipo 'banner'
-        const bannersData = await getBannersByType('banner');
+        // Buscar todos os banners e filtrar pelo tipo 'banner'
+        const bannersData = await getBanners();
         console.log('Banners carregados (raw):', bannersData);
         console.log('Tipo dos banners:', typeof bannersData, Array.isArray(bannersData));
         
+        // Filtrar apenas banners do tipo 'banner'
+        const bannersFiltrados = bannersData.filter(banner => banner.tipo === 'banner');
+        
         // Se houver banners disponíveis, usa todos
-        if (bannersData && Array.isArray(bannersData) && bannersData.length > 0) {
-          console.log('Usando todos os banners dos dados retornados');
-          setBanners(bannersData);
+        if (bannersFiltrados && bannersFiltrados.length > 0) {
+          console.log('Usando banners filtrados:', bannersFiltrados);
+          setBanners(bannersFiltrados);
         } else {
           console.log('Nenhum banner válido encontrado, usando dados padrão');
           // Dados padrão para o banner caso não haja banners no banco
