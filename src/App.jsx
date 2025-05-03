@@ -6,7 +6,7 @@ import Hero from './components/Hero';
 import SearchSection from './components/SearchSection';
 import InfoSection from './components/InfoSection';
 import Footer from './components/Footer';
-import { getDistribuidores, getDistribuidoresPorDistancia } from './services/distribuidoresService';
+import { getDistribuidores, getDistribuidoresPorDistancia, getBanners, getBannersByType } from './services/distribuidoresService';
 import DistributorCard from './components/DistributorCard';
 import LocationFinder from './components/LocationFinder';
 import MapView from './components/MapView';
@@ -23,6 +23,8 @@ function App() {
   const [view, setView] = useState('list'); // 'list' ou 'map'
   const [distanceFilter, setDistanceFilter] = useState(config.defaultDistance);
   const [selectedDistribuidor, setSelectedDistribuidor] = useState(null);
+  const [banners, setBanners] = useState([]);
+  const [bannerLoading, setBannerLoading] = useState(true);
   
   // Carregar script do Google Maps para usar Geocoder
   const { isLoaded: mapsApiLoaded, loadError: mapsLoadError } = useJsApiLoader({
@@ -98,6 +100,52 @@ function App() {
   // Efeito para buscar os distribuidores no carregamento inicial
   useEffect(() => {
     fetchAllDistribuidores();
+  }, []);
+
+  // Efeito para buscar os banners
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        setBannerLoading(true);
+        // Alterar para buscar banners do tipo 'banner'
+        const bannersData = await getBannersByType('banner');
+        console.log('Banners carregados (raw):', bannersData);
+        console.log('Tipo dos banners:', typeof bannersData, Array.isArray(bannersData));
+        
+        // Se houver banners disponíveis, usa todos
+        if (bannersData && Array.isArray(bannersData) && bannersData.length > 0) {
+          console.log('Usando todos os banners dos dados retornados');
+          setBanners(bannersData);
+        } else {
+          console.log('Nenhum banner válido encontrado, usando dados padrão');
+          // Dados padrão para o banner caso não haja banners no banco
+          setBanners([{
+            titulo: 'Kits Home Care',
+            descricao: 'Trate seus cabelos com eficiência!',
+            cta_texto: 'Saiba mais',
+            cta_link: '#',
+            imagem_url: fotoAna,
+            tipo: 'banner'
+          }]);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar banners:', error);
+        console.log('Erro ao buscar banners, usando dados padrão');
+        // Dados padrão para o banner em caso de erro
+        setBanners([{
+          titulo: 'Kits Home Care',
+          descricao: 'Trate seus cabelos com eficiência!',
+          cta_texto: 'Saiba mais',
+          cta_link: '#',
+          imagem_url: fotoAna,
+          tipo: 'banner'
+        }]);
+      } finally {
+        setBannerLoading(false);
+      }
+    };
+    
+    fetchBanners();
   }, []);
 
   // Efeito para atualizar os distribuidores quando a localização ou distância mudar
@@ -278,32 +326,39 @@ function App() {
           )}
         </div>
 
-        {/* Banner de Kits */}
-        <div className="container mx-auto max-w-4xl px-4 md:px-4 my-6 md:my-8">
-          <div className="relative bg-black w-full h-[400px] md:h-[300px] rounded-[16px] overflow-hidden flex flex-col md:flex-row">
-            {/* Lado esquerdo com texto */}
-            <div className="flex-1 flex flex-col justify-center items-start p-6 md:p-12 z-10">
-              <h2 className="text-white text-xl md:text-2xl font-figtree mb-2">
-                Kits Home Care
-              </h2>
-              <h1 className="text-white text-3xl md:text-4xl font-figtree font-bold mb-6 max-w-md">
-                Trate seus cabelos com eficiência!
-              </h1>
-              <button className="bg-white text-black px-6 md:px-8 py-2 md:py-3 rounded-lg font-figtree hover:bg-gray-100 transition-colors text-sm md:text-base">
-                Saiba mais
-              </button>
-            </div>
+        {/* Banners de Kits - Mostrar todos os banners disponíveis */}
+        {banners.length > 0 && (
+          <div className="container mx-auto max-w-4xl px-4 md:px-4 my-6 md:my-8 space-y-6">
+            {banners.map((banner, index) => (
+              <div key={banner.id || index} className="relative bg-black w-full h-[400px] md:h-[300px] rounded-[16px] overflow-hidden flex flex-col md:flex-row">
+                {/* Lado esquerdo com texto */}
+                <div className="flex-1 flex flex-col justify-center items-start p-6 md:p-12 z-10">
+                  <h2 className="text-white text-xl md:text-2xl font-figtree mb-2">
+                    {banner.titulo || 'Kits Home Care'}
+                  </h2>
+                  <h1 className="text-white text-3xl md:text-4xl font-figtree font-bold mb-6 max-w-md">
+                    {banner.descricao || 'Trate seus cabelos com eficiência!'}
+                  </h1>
+                  <a 
+                    href={banner.cta_link || '#'} 
+                    className="bg-white text-black px-6 md:px-8 py-2 md:py-3 rounded-lg font-figtree hover:bg-gray-100 transition-colors text-sm md:text-base"
+                  >
+                    {banner.cta_texto || 'Saiba mais'}
+                  </a>
+                </div>
 
-            {/* Lado direito com imagem */}
-            <div className="flex-1 relative h-48 md:h-auto">
-              <img
-                src={fotoAna}
-                alt="Ana demonstrando produto"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </div>
+                {/* Lado direito com imagem */}
+                <div className="flex-1 relative h-48 md:h-auto">
+                  <img
+                    src={banner.imagem_url || fotoAna}
+                    alt="Imagem do banner"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
 
         <InfoSection />
       </main>
