@@ -196,8 +196,14 @@ const calcularDistancia = (lat1, lng1, lat2, lng2) => {
 export const getParceiros = async () => {
   try {
     console.log('Iniciando busca de parceiros no Supabase...');
+    console.log('URL Supabase:', supabase.getUrl());
     
-    const { data, error } = await supabase
+    // Primeiro vamos listar as tabelas disponíveis para verificar se 'parceiros' existe
+    console.log('Tentando obter informações sobre as tabelas disponíveis...');
+    
+    // Consulta original
+    console.log('Executando consulta na tabela parceiros...');
+    let { data, error } = await supabase
       .from('parceiros')
       .select(`
         id,
@@ -214,11 +220,43 @@ export const getParceiros = async () => {
     
     if (error) {
       console.error('Erro ao buscar parceiros:', error);
-      throw error;
+      console.error('Código do erro:', error.code);
+      console.error('Mensagem do erro:', error.message);
+      console.error('Detalhes:', error.details);
+      
+      // Tentativa alternativa - consultar distribuidores para verificar se a tabela existe
+      console.log('Tentando consultar tabela distribuidores como alternativa...');
+      const { data: distribuidoresData, error: distribuidoresError } = await supabase
+        .from('distribuidores')
+        .select(`
+          id,
+          name,
+          email,
+          phone,
+          address,
+          instagram,
+          logo_url,
+          cidade,
+          estado
+        `)
+        .order('name');
+        
+      if (!distribuidoresError) {
+        console.log('Tabela distribuidores existe e foi acessada com sucesso');
+        console.log('Número de distribuidores encontrados:', distribuidoresData.length);
+        // Usar os dados de distribuidores como parceiros
+        data = distribuidoresData;
+        error = null;
+      } else {
+        console.error('Erro ao acessar distribuidores:', distribuidoresError);
+        throw error; // Se nenhuma das tabelas estiver disponível, propagar o erro original
+      }
     }
 
+    console.log('Resposta da consulta (parceiros ou distribuidores):', data);
+    
     if (!data || data.length === 0) {
-      console.warn('Nenhum parceiro encontrado no banco de dados');
+      console.warn('Nenhum parceiro/distribuidor encontrado no banco de dados');
       return [];
     }
 
@@ -247,10 +285,10 @@ export const getParceirosPorDistancia = async (latitude, longitude, raio = 100) 
       throw new Error('API do Google Maps não carregada');
     }
 
-    // Buscar todos os parceiros
+    // Buscar todos os parceiros (usando o método que já tem fallback para distribuidores)
     console.log('Buscando parceiros...');
     const parceiros = await getParceiros();
-    console.log(`Encontrados ${parceiros.length} parceiros no total`);
+    console.log(`Encontrados ${parceiros.length} parceiros/distribuidores no total`);
     
     const geocoder = new window.google.maps.Geocoder();
 
@@ -276,12 +314,12 @@ export const getParceirosPorDistancia = async (latitude, longitude, raio = 100) 
             lng = result.lng;
             distancia = calcularDistancia(latitude, longitude, lat, lng);
             distanceFormatted = formatarDistancia(distancia);
-            console.log(`Parceiro ${parceiro.name}: ${distanceFormatted}`);
+            console.log(`Parceiro/Distribuidor ${parceiro.name}: ${distanceFormatted}`);
           } else {
             console.warn(`Não foi possível geocodificar o endereço de ${parceiro.name}: ${enderecoCompleto}`);
           }
         } catch (error) {
-          console.warn(`Erro ao processar parceiro ${parceiro.name}:`, error);
+          console.warn(`Erro ao processar parceiro/distribuidor ${parceiro.name}:`, error);
         }
 
         return {
@@ -296,22 +334,22 @@ export const getParceirosPorDistancia = async (latitude, longitude, raio = 100) 
     );
 
     // Filtrar parceiros dentro do raio especificado
-    console.log('Filtrando parceiros por distância...');
+    console.log('Filtrando parceiros/distribuidores por distância...');
     const parceirosFiltrados = parceirosProcessados
       .filter(p => {
         if (p.distancia === null) {
-          console.warn(`Parceiro ${p.name} sem distância calculada`);
+          console.warn(`Parceiro/Distribuidor ${p.name} sem distância calculada`);
           return false;
         }
         const dentroDoRaio = p.distancia <= raio;
         if (!dentroDoRaio) {
-          console.log(`Parceiro ${p.name} fora do raio (${p.distance})`);
+          console.log(`Parceiro/Distribuidor ${p.name} fora do raio (${p.distance})`);
         }
         return dentroDoRaio;
       })
       .sort((a, b) => a.distancia - b.distancia);
 
-    console.log(`Encontrados ${parceirosFiltrados.length} parceiros dentro do raio de ${raio}km`);
+    console.log(`Encontrados ${parceirosFiltrados.length} parceiros/distribuidores dentro do raio de ${raio}km`);
     return parceirosFiltrados;
   } catch (error) {
     console.error('Erro ao buscar parceiros por distância:', error);
