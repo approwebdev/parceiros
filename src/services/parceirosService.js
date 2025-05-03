@@ -196,7 +196,6 @@ const calcularDistancia = (lat1, lng1, lat2, lng2) => {
 export const getParceiros = async () => {
   try {
     console.log('Iniciando busca de parceiros no Supabase...');
-    console.log('URL Supabase:', supabase.getUrl());
     
     // Primeiro vamos listar as tabelas disponíveis para verificar se 'parceiros' existe
     console.log('Tentando obter informações sobre as tabelas disponíveis...');
