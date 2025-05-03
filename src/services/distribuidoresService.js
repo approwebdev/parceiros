@@ -1,11 +1,11 @@
 import { supabase } from '../supabaseClient';
 import config from '../config';
-import { getBanners as originalGetBanners, getBannersByType as originalGetBannersByType } from '../lib/api';
 
-// Função wrapper para getBanners com tratamento de erros
+// Implementação local das funções de banners sem depender do import de api.js
+// Busca banners disponíveis para uma posição específica
 export const getBanners = async (posicao = null) => {
   try {
-    console.log('Chamando getBanners para posição:', posicao);
+    console.log('Iniciando busca de banners para posição:', posicao);
     
     // Banner padrão para fallback
     const defaultBanner = {
@@ -19,27 +19,50 @@ export const getBanners = async (posicao = null) => {
       posicao: posicao || 'todos'
     };
     
-    // Chamar a função original com tratamento de erros
-    let result;
-    try {
-      result = await originalGetBanners(posicao);
-      console.log('Resultado original de getBanners:', result);
-    } catch (error) {
-      console.error('Erro na função originalGetBanners:', error);
-      result = [defaultBanner];
+    // Tentativa de buscar do Supabase
+    let query = supabase.from('banners').select('*');
+    
+    if (posicao) {
+      // Construir a expressão de filtro corretamente
+      query = query.or(`posicao.eq.${posicao},posicao.eq.todos`);
     }
     
-    // Validar resultado
-    if (!result || !Array.isArray(result) || result.length === 0) {
-      console.log('Resultado inválido, usando banner padrão');
+    console.log('Executando query de banners...');
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Erro do Supabase ao buscar banners:', error);
+      console.log('Retornando banner padrão devido ao erro do Supabase');
       return [defaultBanner];
     }
     
-    console.log('Retornando resultado válido:', result);
-    return result;
+    console.log('Resposta do Supabase para banners:', data);
+    
+    // Verificar se os dados são válidos
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log('Nenhum banner encontrado no Supabase, retornando banner padrão');
+      return [defaultBanner];
+    }
+    
+    // Garantir que todos os banners tenham os campos necessários
+    const validBanners = data.map(banner => ({
+      id: banner.id || 1,
+      titulo: banner.titulo || 'Kits Home Care',
+      descricao: banner.descricao || 'Trate seus cabelos com eficiência!',
+      cta_texto: banner.cta_texto || 'Saiba mais',
+      cta_link: banner.cta_link || '#',
+      imagem_url: banner.imagem_url || '/catalogo/foto anapaula.png',
+      tipo: banner.tipo || 'banner',
+      posicao: banner.posicao || posicao || 'todos'
+    }));
+    
+    console.log('Banners processados e validados:', validBanners);
+    return validBanners;
   } catch (error) {
     console.error('Erro não tratado em getBanners:', error);
-    // Retornar banner padrão em caso de erro
+    console.log('Retornando banner padrão devido a erro não tratado');
+    
+    // Retornar dados mockados em caso de erro
     return [{
       id: 1,
       titulo: 'Kits Home Care',
@@ -53,10 +76,10 @@ export const getBanners = async (posicao = null) => {
   }
 };
 
-// Função wrapper para getBannersByType com tratamento de erros
+// Função para buscar banners por tipo específico
 export const getBannersByType = async (tipo) => {
   try {
-    console.log('Chamando getBannersByType para tipo:', tipo);
+    console.log('Iniciando busca de banners do tipo:', tipo);
     
     // Banner padrão para fallback
     const defaultBanner = {
@@ -69,27 +92,48 @@ export const getBannersByType = async (tipo) => {
       tipo: tipo || 'informativo'
     };
     
-    // Chamar a função original com tratamento de erros
-    let result;
-    try {
-      result = await originalGetBannersByType(tipo);
-      console.log('Resultado original de getBannersByType:', result);
-    } catch (error) {
-      console.error('Erro na função originalGetBannersByType:', error);
-      result = [defaultBanner];
+    // Busca banners do tipo especificado
+    let query = supabase.from('banners').select('*');
+    
+    if (tipo) {
+      query = query.eq('tipo', tipo);
     }
     
-    // Validar resultado
-    if (!result || !Array.isArray(result) || result.length === 0) {
-      console.log('Resultado inválido, usando banner padrão');
+    console.log('Executando query de banners por tipo...');
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Erro do Supabase ao buscar banners por tipo:', error);
+      console.log('Retornando banner padrão devido ao erro do Supabase');
       return [defaultBanner];
     }
     
-    console.log('Retornando resultado válido:', result);
-    return result;
+    console.log('Resposta do Supabase para banners por tipo:', data);
+    
+    // Verificar se os dados são válidos
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log('Nenhum banner do tipo encontrado no Supabase, retornando banner padrão');
+      return [defaultBanner];
+    }
+    
+    // Garantir que todos os banners tenham os campos necessários
+    const validBanners = data.map(banner => ({
+      id: banner.id || 1,
+      titulo: banner.titulo || 'Atenção',
+      descricao: banner.descricao || 'Este site apenas informa quais salões utilizam os produtos A&P Professional. A responsabilidade pela qualidade dos serviços prestados é exclusivamente do salão listado acima.',
+      cta_texto: banner.cta_texto || 'Saiba mais',
+      cta_link: banner.cta_link || '#',
+      imagem_url: banner.imagem_url || '',
+      tipo: banner.tipo || tipo
+    }));
+    
+    console.log('Banners por tipo processados e validados:', validBanners);
+    return validBanners;
   } catch (error) {
     console.error('Erro não tratado em getBannersByType:', error);
-    // Retornar banner padrão em caso de erro
+    console.log('Retornando banner padrão devido a erro não tratado');
+    
+    // Retornar dados mockados em caso de erro
     return [{
       id: 1,
       titulo: 'Atenção',
