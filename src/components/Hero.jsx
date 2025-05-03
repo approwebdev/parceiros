@@ -1,7 +1,7 @@
 import React from 'react';
 
-// Corrigir o nome do arquivo da imagem
-import heroImageSrc from '../assets/hero-imagenew.png';
+// Atualizar a imagem para foto 2.png
+import heroImageSrc from '../assets/foto 2.png';
 
 const Hero = () => {
   return (
