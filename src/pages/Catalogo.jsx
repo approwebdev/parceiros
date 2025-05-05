@@ -49,6 +49,12 @@ export default function Catalogo() {
   return (
     <div className="fixed inset-0 bg-black text-white font-figtree overflow-hidden">
       <style jsx>{`
+        @media (max-width: 1600px) {
+          .menu-text {
+            font-size: 180% !important;
+          }
+        }
+        
         @media (max-width: 768px) {
           .mobile-text-container {
             top: 5% !important;
@@ -60,25 +66,20 @@ export default function Catalogo() {
             position: relative !important;
           }
           
-          .mobile-text-container span:first-child {
-            font-size: 4rem !important;
+          .menu-digital-container {
+            flex-direction: column !important;
+            align-items: center !important;
+          }
+          
+          .menu-text {
             margin-left: 0 !important;
-            line-height: 0.9 !important;
+            margin-bottom: 0.5rem !important;
+            font-size: 5.5rem !important;
           }
           
-          .mobile-text-container .digital-text {
-            font-size: 6.2rem !important;
-            line-height: 0.9 !important;
-            letter-spacing: -0.04em !important;
-            margin-top: 0.5rem !important;
-          }
-          
-          .mobile-text-container .distribuidor-text {
-            position: static !important;
-            transform: none !important;
-            display: block !important;
-            margin-top: 0.75rem !important;
-            font-size: 1.7rem !important;
+          .digital-text {
+            margin-left: 0 !important;
+            font-size: 3.5rem !important;
           }
           
           .mobile-text-container button {
@@ -109,16 +110,12 @@ export default function Catalogo() {
             top: 3% !important;
           }
 
-          .mobile-text-container span:first-child {
-            font-size: 3.2rem !important;
+          .menu-text {
+            font-size: 4.5rem !important;
           }
           
-          .mobile-text-container .digital-text {
-            font-size: 4.8rem !important;
-          }
-          
-          .mobile-text-container .distribuidor-text {
-            font-size: 1.4rem !important;
+          .digital-text {
+            font-size: 3rem !important;
           }
           
           .mobile-text-container button {
@@ -321,31 +318,33 @@ export default function Catalogo() {
         {/* BLOCO DE TEXTO AJUSTADO */}
         <motion.div 
           className="absolute top-[45%] left-[8%] transform -translate-y-1/2 z-10 mobile-text-container"
+          style={{ fontSize: "6vw" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
           <div className="relative">
-            <motion.span
-              className="block text-white font-bold"
-              style={{
-                fontSize: "clamp(3rem, 7vw, 6rem)",
-                letterSpacing: "-0.03em",
-                lineHeight: "1",
-                marginLeft: "clamp(0.5rem, 1vw, 1rem)"
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              Catálogo
-            </motion.span>
-
-            <div className="relative">
+            <div className="flex items-baseline menu-digital-container">
               <motion.span
-                className="block text-gray-400 font-bold digital-text"
+                className="block font-bold menu-text"
                 style={{
-                  fontSize: "clamp(4.5rem, 13vw, 15rem)",
+                  fontSize: "220%",
+                  letterSpacing: "-0.03em",
+                  lineHeight: "1",
+                  marginLeft: "clamp(0.5rem, 1vw, 1rem)",
+                  color: "#E8D2A9"
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                Menu
+              </motion.span>
+
+              <motion.span
+                className="block text-white font-bold ml-4 digital-text"
+                style={{
+                  fontSize: "50%",
                   letterSpacing: "-0.06em",
                   lineHeight: "0.9",
                 }}
@@ -354,19 +353,6 @@ export default function Catalogo() {
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
                 Digital
-              </motion.span>
-              
-              <motion.span
-                className="absolute right-0 bottom-0 text-white transform translate-y-full distribuidor-text"
-                style={{
-                  fontSize: "clamp(0.875rem, 2vw, 1.5rem)",
-                  letterSpacing: "-0.01em",
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                Distribuidor Oficial
               </motion.span>
             </div>
           </div>

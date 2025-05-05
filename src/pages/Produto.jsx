@@ -84,9 +84,9 @@ export default function Produto() {
 
   // Função para lidar com a navegação de volta
   const handleBack = () => {
-    // Se veio de uma categoria específica, volta para ela
+    // Se veio de uma categoria específica, volta para o menu (já não existem mais a página de categorias)
     if (location.state?.from === 'categoria') {
-      navigate(`/categorias/${location.state.categoryId}`);
+      navigate('/menu');
     }
     // Se veio do menu
     else if (location.state?.from === 'menu') {

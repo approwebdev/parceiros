@@ -49,7 +49,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/menu" element={<Menu />} />
-          <Route path="/categorias/:id" element={<Categoria />} />
           <Route path="/produtos/:id" element={<Produto />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="*" element={<Navigate to="/" replace />} />

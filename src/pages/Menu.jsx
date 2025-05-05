@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { getCategories } from "../lib/api";
+import { getCategories, getProductsByCategory } from "../lib/api";
 
 export default function Menu() {
   const navigate = useNavigate();
@@ -37,9 +37,28 @@ export default function Menu() {
             name: data[0].name,
             image_url: data[0].image_url
           });
+          
+          // Para cada categoria, vamos carregar também o primeiro produto
+          const categoriasComProduto = await Promise.all(
+            data.map(async (categoria) => {
+              try {
+                const produtos = await getProductsByCategory(categoria.id);
+                const primeiroProduto = produtos && produtos.length > 0 ? produtos[0] : null;
+                return {
+                  ...categoria,
+                  primeiroProduto: primeiroProduto ? primeiroProduto.id : null
+                };
+              } catch (error) {
+                console.error(`Erro ao carregar produtos da categoria ${categoria.id}:`, error);
+                return categoria;
+              }
+            })
+          );
+          
+          setCategorias(categoriasComProduto || []);
+        } else {
+          setCategorias(data || []);
         }
-        
-        setCategorias(data || []);
       } catch (error) {
         console.error("Erro ao carregar categorias:", error);
         setError(error.message);
@@ -201,11 +220,19 @@ export default function Menu() {
               <motion.div
                 key={cat.id}
                 className={`relative ${isMobile ? 'w-[100%] flex-shrink-0' : 'w-[25%] flex-shrink-0'} h-full overflow-hidden cursor-pointer group`}
-                onClick={() => navigate(`/categorias/${cat.id}`, {
-                  state: {
-                    from: 'menu'
+                onClick={() => {
+                  if (cat.primeiroProduto) {
+                    navigate(`/produtos/${cat.primeiroProduto}`, {
+                      state: {
+                        from: 'menu',
+                        categoryId: cat.id
+                      }
+                    });
+                  } else {
+                    // Fallback caso não tenha produto
+                    alert("Não há produtos disponíveis nesta categoria.");
                   }
-                })}
+                }}
                 whileHover={{
                   scale: 1.02,
                   transition: { duration: 0.3 }
